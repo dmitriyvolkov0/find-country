@@ -1,0 +1,7 @@
+build
+build.zip
+
+node_modules
+
+.env.local
+.env.*.local
