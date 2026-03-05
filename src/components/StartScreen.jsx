@@ -4,7 +4,7 @@ import useGameStore from '../store/gameStore';
 /**
  * Экран приветствия / старта игры
  */
-export function StartScreen({ onStart }) {
+export function StartScreen({ onStart, onViewMode }) {
   const { savedStats } = useGameStore();
 
   return (
@@ -57,19 +57,34 @@ export function StartScreen({ onStart }) {
           </div>
         )}
 
-        {/* Кнопка старта */}
-        <button
-          onClick={onStart}
-          className="w-full max-w-xs mx-auto px-6 py-3 sm:py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-semibold text-lg sm:text-xl rounded-xl shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-blue-900"
-          aria-label="Начать игру"
-        >
-          Начать игру
-        </button>
+        {/* Кнопки */}
+        <div className="space-y-3 w-full max-w-xs mx-auto">
+          <button
+            onClick={onStart}
+            className="w-full px-6 py-3 sm:py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-semibold text-lg sm:text-xl rounded-xl shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-blue-900"
+            aria-label="Начать игру"
+          >
+            Начать игру
+          </button>
 
-        {/* Подсказка */}
-        <p className="mt-6 text-blue-300 text-xs sm:text-sm">
-          Нажмите на страну на глобусе,<br />которую показывает задание
-        </p>
+          <button
+            onClick={onViewMode}
+            className="w-full px-6 py-3 sm:py-4 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-400 hover:to-cyan-500 text-white font-semibold text-lg sm:text-xl rounded-xl shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-blue-900"
+            aria-label="Режим просмотра"
+          >
+            Режим просмотра
+          </button>
+        </div>
+
+        {/* Подсказки */}
+        <div className="mt-6 space-y-2">
+          <p className="text-blue-300 text-xs sm:text-sm">
+            <span className="font-semibold">Игра:</span> Нажмите на страну на глобусе,<br />которую показывает задание
+          </p>
+          <p className="text-blue-300 text-xs sm:text-sm">
+            <span className="font-semibold">Просмотр:</span> Изучайте глобус с названиями всех стран
+          </p>
+        </div>
       </div>
     </div>
   );

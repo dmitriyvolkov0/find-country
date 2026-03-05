@@ -8,6 +8,7 @@ import StartScreen from './components/StartScreen';
 import QuestionScreen from './components/QuestionScreen';
 import FeedbackScreen from './components/FeedbackScreen';
 import GameOverScreen from './components/GameOverScreen';
+import ViewScreen from './components/ViewScreen';
 
 /**
  * Корневой компонент приложения Map It!
@@ -24,6 +25,8 @@ export default function App() {
     loadSavedStats,
     savedStats,
     clearHighlightedCountries,
+    startViewMode,
+    stopViewMode,
   } = useGameStore();
 
   const { save: saveStats } = useVKStorage();
@@ -150,27 +153,44 @@ export default function App() {
   }, [clearHighlightedCountries]);
 
   /**
+   * Вход в режим просмотра
+   */
+  const handleViewMode = useCallback(async () => {
+    await startViewMode();
+  }, [startViewMode]);
+
+  /**
+   * Выход из режима просмотра
+   */
+  const handleExitViewMode = useCallback(() => {
+    stopViewMode();
+  }, [stopViewMode]);
+
+  /**
    * Рендер в зависимости от фазы игры
    */
   const renderPhase = () => {
     switch (phase) {
       case GamePhase.START:
-        return <StartScreen onStart={handleStart} />;
-      
+        return <StartScreen onStart={handleStart} onViewMode={handleViewMode} />;
+
       case GamePhase.QUESTION:
         return <QuestionScreen />;
-      
+
       case GamePhase.FEEDBACK:
         return <FeedbackScreen onNext={handleNext} />;
-      
+
       case GamePhase.GAME_OVER:
         return (
-          <GameOverScreen 
-            onRestart={handleStart} 
-            onBackToMenu={handleBackToMenu} 
+          <GameOverScreen
+            onRestart={handleStart}
+            onBackToMenu={handleBackToMenu}
           />
         );
-      
+
+      case GamePhase.VIEW:
+        return <ViewScreen onExit={handleExitViewMode} />;
+
       default:
         return null;
     }

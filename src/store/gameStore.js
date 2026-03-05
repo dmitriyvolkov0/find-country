@@ -8,6 +8,7 @@ export const GamePhase = {
   QUESTION: 'question',
   FEEDBACK: 'feedback',
   GAME_OVER: 'game_over',
+  VIEW: 'view', // Режим просмотра
 };
 
 // Глобальное хранилище данных о странах
@@ -102,15 +103,15 @@ const useGameStore = create((set, get) => ({
     if (!dataToUse || dataToUse.length === 0) {
       dataToUse = await loadCountriesData();
     }
-    
+
     if (dataToUse.length === 0) {
       console.error('No countries data available');
       return;
     }
-    
+
     const shuffled = [...dataToUse].sort(() => Math.random() - 0.5);
     const selected = shuffled.slice(0, get().totalQuestions);
-    
+
     set({
       phase: GamePhase.QUESTION,
       currentQuestion: selected[0],
@@ -125,6 +126,25 @@ const useGameStore = create((set, get) => ({
       isCorrect: null,
       countriesData: selected,
       usedCountries: [selected[0]],
+    });
+  },
+
+  startViewMode: async () => {
+    set({
+      phase: GamePhase.VIEW,
+      currentQuestion: null,
+      selectedCountry: null,
+      isCorrect: null,
+      highlightedCountries: [],
+      timerActive: false,
+    });
+  },
+
+  stopViewMode: () => {
+    set({
+      phase: GamePhase.START,
+      currentQuestion: null,
+      selectedCountry: null,
     });
   },
 

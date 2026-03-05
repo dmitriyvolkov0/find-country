@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Globe from 'react-globe.gl';
 import useGameStore, { GamePhase } from '../store/gameStore';
 
@@ -15,6 +15,7 @@ export function Globe3D({ onCountryClick }) {
 
   const [countries, setCountries] = useState({ features: [] });
   const [hoveredCountry, setHoveredCountry] = useState(null);
+  const [countryLabels, setCountryLabels] = useState([]);
   const globeRef = useRef(null);
 
   /**
@@ -38,6 +39,31 @@ export function Globe3D({ onCountryClick }) {
         });
 
         setCountries({ features });
+
+        // Создаём данные для лейблов с координатами
+        const labels = features.map(country => {
+          const props = country.properties;
+          let lat, lng;
+
+          // Используем центр bounding box: [minX, minY, maxX, maxY]
+          if (country.bbox) {
+            const [minX, minY, maxX, maxY] = country.bbox;
+            lat = (minY + maxY) / 2;
+            lng = (minX + maxX) / 2;
+          } else {
+            lat = 0;
+            lng = 0;
+          }
+
+          return {
+            lat,
+            lng,
+            name: props.NAME || '',
+            iso: props.ISO_A3 || '',
+          };
+        });
+
+        setCountryLabels(labels);
       } catch (err) {
         console.error('Error loading countries data:', err);
       }
@@ -53,6 +79,7 @@ export function Globe3D({ onCountryClick }) {
     if (phase === GamePhase.QUESTION && onCountryClick) {
       onCountryClick(country);
     }
+    // В режиме VIEW клики не обрабатываем
   }, [phase, onCountryClick]);
 
   /**
@@ -60,7 +87,7 @@ export function Globe3D({ onCountryClick }) {
    */
   const handlePolygonHover = useCallback((country) => {
     setHoveredCountry(country);
-    if (country && phase === GamePhase.QUESTION) {
+    if (country && (phase === GamePhase.QUESTION || phase === GamePhase.VIEW)) {
       document.body.style.cursor = 'pointer';
     } else {
       document.body.style.cursor = 'default';
@@ -188,20 +215,33 @@ export function Globe3D({ onCountryClick }) {
         showAtmosphere={true}
         atmosphereColor="#3a22c0"
         atmosphereAltitude={0.25}
-        
+
         polygonsData={countries.features}
         polygonAltitude={getCountryAltitude}
         polygonCapColor={getCountryColor}
         polygonSideColor={() => '#2d3748'}
         polygonStrokeColor={() => '#1a202c'}
-        
+
         onPolygonHover={handlePolygonHover}
         onPolygonClick={handlePolygonClick}
 
         polygonsTransitionDuration={700}
-        label={{
-          text: (d) => d.properties?.NAME || '',
-          resolution: 6,
+
+        // HTML элементы для названий стран (только в режиме просмотра)
+        htmlElementsData={phase === GamePhase.VIEW ? countryLabels : []}
+        htmlElement={(elem) => {
+          const div = document.createElement('div');
+          div.className = 'text-white text-xs font-semibold pointer-events-none';
+          div.style.cssText = `
+            background: rgba(0, 0, 0, 0.6);
+            padding: 2px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+            font-size: 11px;
+            text-shadow: 1px 1px 2px black;
+          `;
+          div.textContent = elem.name;
+          return div;
         }}
       />
     </div>
