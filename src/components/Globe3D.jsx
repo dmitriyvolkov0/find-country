@@ -89,10 +89,6 @@ export function Globe3D({ onCountryClick }) {
       return '#60a5fa';
     }
 
-    if (isTarget && phase === GamePhase.QUESTION) {
-      return '#4299e1';
-    }
-
     return '#4a5568';
   }, [currentQuestion, selectedCountry, phase, hoveredCountry]);
 
