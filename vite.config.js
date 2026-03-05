@@ -1,6 +1,8 @@
 import { defineConfig, transformWithEsbuild } from 'vite';
 import react from '@vitejs/plugin-react';
 import legacy from '@vitejs/plugin-legacy';
+import fs from 'fs';
+import path from 'path';
 
 function handleModuleDirectivesPlugin() {
   return {
@@ -29,6 +31,33 @@ function threatJsFilesAsJsx() {
 }
 
 /**
+ * Плагин для копирования datasets в папку сборки
+ */
+function copyDatasetsPlugin() {
+  return {
+    name: 'copy-datasets',
+    apply: 'build',
+    writeBundle(options, bundle) {
+      const srcDir = path.resolve(__dirname, 'src/datasets');
+      const destDir = path.resolve(__dirname, 'build/src/datasets');
+      
+      if (!fs.existsSync(destDir)) {
+        fs.mkdirSync(destDir, { recursive: true });
+      }
+      
+      if (fs.existsSync(srcDir)) {
+        const files = fs.readdirSync(srcDir);
+        files.forEach(file => {
+          const srcFile = path.join(srcDir, file);
+          const destFile = path.join(destDir, file);
+          fs.copyFileSync(srcFile, destFile);
+        });
+      }
+    },
+  };
+}
+
+/**
  * Some chunks may be large.
  * This will not affect the loading speed of the site.
  * We collect several versions of scripts that are applied depending on the browser version.
@@ -42,6 +71,7 @@ export default defineConfig({
     react(),
     threatJsFilesAsJsx(),
     handleModuleDirectivesPlugin(),
+    copyDatasetsPlugin(),
     legacy({
       targets: ['defaults', 'not IE 11'],
     }),

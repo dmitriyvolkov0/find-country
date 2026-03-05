@@ -16,9 +16,12 @@
     "@vkontakte/vk-bridge": "^2.13.0",
     "@vkontakte/vk-bridge-react": "^1.0.1",
     "@vkontakte/vkui": "^7.0.0",
+    "globe.gl": "^2.45.0",
     "prop-types": "^15.8.1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-globe.gl": "^2.37.0",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@vitejs/plugin-legacy": "^5.3.1",
