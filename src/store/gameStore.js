@@ -25,13 +25,13 @@ export async function loadCountriesData() {
     const response = await fetch('./src/datasets/ne_110m_admin_0_countries.geojson');
     const data = await response.json();
     
-    // Фильтруем страны
+    // Фильтруем страны: убираем Антарктиду и мелкие территории
     globalCountriesData = data.features.filter(country => {
       const props = country.properties;
       return (
         props.CONTINENT !== 'Antarctica' &&
         props.POP_EST > 10000 &&
-        props.TYPE === 'Sovereign country' &&
+        (props.TYPE === 'Sovereign country' || props.TYPE === 'Country') &&
         props.NAME !== 'Antarctica'
       );
     });
