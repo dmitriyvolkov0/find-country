@@ -23,6 +23,7 @@ export default function App() {
     selectCountry,
     loadSavedStats,
     savedStats,
+    clearHighlightedCountries,
   } = useGameStore();
 
   const { save: saveStats } = useVKStorage();
@@ -131,20 +132,22 @@ export default function App() {
    * Переход к следующему вопросу
    */
   const handleNext = useCallback(() => {
+    clearHighlightedCountries();
     nextQuestion();
-  }, [nextQuestion]);
+  }, [nextQuestion, clearHighlightedCountries]);
 
   /**
    * Возврат в главное меню
    */
   const handleBackToMenu = useCallback(() => {
+    clearHighlightedCountries();
     useGameStore.setState({
       phase: GamePhase.START,
       score: 0,
       questionIndex: 0,
       correctAnswers: 0,
     });
-  }, []);
+  }, [clearHighlightedCountries]);
 
   /**
    * Рендер в зависимости от фазы игры

@@ -76,6 +76,9 @@ const useGameStore = create((set, get) => ({
   selectedCountry: null,
   isCorrect: null,
 
+  // Подсветка стран (для визуальной обратной связи)
+  highlightedCountries: [], // Массив объектов: { country, color: 'red' | 'green' }
+
   // Прогресс игры
   countriesData: [],
   usedCountries: [],
@@ -156,21 +159,54 @@ const useGameStore = create((set, get) => ({
     const { currentQuestion } = get();
     const isCorrect = country?.properties?.ISO_A3 === currentQuestion?.properties?.ISO_A3;
 
-    set({
-      selectedCountry: country,
-      isCorrect,
-      phase: GamePhase.FEEDBACK,
-      timerActive: false,
-      score: isCorrect ? get().score + calculateScore(get().streak, get().timeLeft) : get().score,
-      correctAnswers: isCorrect ? get().correctAnswers + 1 : get().correctAnswers,
-      streak: isCorrect ? get().streak + 1 : 0,
-      maxStreak: isCorrect ? Math.max(get().maxStreak, get().streak + 1) : get().maxStreak,
-    });
+    if (isCorrect) {
+      // Правильный ответ — сразу переходим к FEEDBACK
+      set({
+        selectedCountry: country,
+        isCorrect,
+        phase: GamePhase.FEEDBACK,
+        timerActive: false,
+        score: get().score + calculateScore(get().streak, get().timeLeft),
+        correctAnswers: get().correctAnswers + 1,
+        streak: get().streak + 1,
+        maxStreak: Math.max(get().maxStreak, get().streak + 1),
+        highlightedCountries: [{ country, color: 'green' }],
+      });
+    } else {
+      // Ошибочный ответ — сначала показываем ошибку красным
+      set({
+        selectedCountry: country,
+        isCorrect,
+        phase: GamePhase.FEEDBACK,
+        timerActive: false,
+        highlightedCountries: [{ country, color: 'red' }],
+      });
+
+      // Затем показываем правильный ответ зелёным (через 800мс)
+      setTimeout(() => {
+        set({
+          highlightedCountries: [
+            { country, color: 'red' },
+            { country: currentQuestion, color: 'green' },
+          ],
+        });
+
+        // Перемещаем камеру на правильную страну (через 100мс после подсветки)
+        setTimeout(() => {
+          const event = new CustomEvent('focusOnCountry', { 
+            detail: { country: currentQuestion } 
+          });
+          window.dispatchEvent(event);
+        }, 100);
+      }, 800);
+    }
   },
 
   updateTimer: (timeLeft) => set({ timeLeft }),
 
   stopTimer: () => set({ timerActive: false }),
+
+  clearHighlightedCountries: () => set({ highlightedCountries: [] }),
 
   updateSettings: (newSettings) => set({ settings: { ...get().settings, ...newSettings } }),
 
