@@ -1,6 +1,7 @@
 import React from 'react';
 import useGameStore from '../store/gameStore';
 import { GamePhase } from '../store/gameStore';
+import ConfirmationButtons from './ConfirmationButtons';
 
 /**
  * Экран вопроса с таймером и прогрессом
@@ -99,13 +100,16 @@ export function QuestionScreen() {
             </span>
           </div>
           <div className="h-3 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
-            <div 
+            <div
               className={`h-full ${timerColor} transition-all duration-100 ease-linear`}
               style={{ width: `${timerPercentage}%` }}
             />
           </div>
         </div>
       </div>
+
+      {/* Кнопки подтверждения/отмены выбора страны */}
+      <ConfirmationButtons />
     </>
   );
 }

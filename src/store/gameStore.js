@@ -75,6 +75,7 @@ const useGameStore = create((set, get) => ({
 
   // Выбранная страна
   selectedCountry: null,
+  pendingSelection: null, // Страна, ожидающая подтверждения пользователем
   isCorrect: null,
 
   // Подсветка стран (для визуальной обратной связи)
@@ -134,6 +135,7 @@ const useGameStore = create((set, get) => ({
       phase: GamePhase.VIEW,
       currentQuestion: null,
       selectedCountry: null,
+      pendingSelection: null,
       isCorrect: null,
       highlightedCountries: [],
       timerActive: false,
@@ -145,6 +147,7 @@ const useGameStore = create((set, get) => ({
       phase: GamePhase.START,
       currentQuestion: null,
       selectedCountry: null,
+      pendingSelection: null,
     });
   },
 
@@ -170,56 +173,75 @@ const useGameStore = create((set, get) => ({
       timeLeft: 30,
       timerActive: true,
       selectedCountry: null,
+      pendingSelection: null,
       isCorrect: null,
       usedCountries: [...usedCountries, nextCountry],
     });
   },
 
   selectCountry: (country) => {
-    const { currentQuestion } = get();
-    const isCorrect = country?.properties?.ISO_A3 === currentQuestion?.properties?.ISO_A3;
+    // Устанавливаем страну как ожидающую подтверждения
+    set({
+      pendingSelection: country,
+    });
+  },
+
+  confirmSelection: () => {
+    const { pendingSelection, currentQuestion, streak } = get();
+    if (!pendingSelection) return;
+
+    const isCorrect = pendingSelection?.properties?.ISO_A3 === currentQuestion?.properties?.ISO_A3;
 
     if (isCorrect) {
       // Правильный ответ — сразу переходим к FEEDBACK
       set({
-        selectedCountry: country,
+        selectedCountry: pendingSelection,
+        pendingSelection: null,
         isCorrect,
         phase: GamePhase.FEEDBACK,
         timerActive: false,
-        score: get().score + calculateScore(get().streak, get().timeLeft),
+        score: get().score + calculateScore(streak, get().timeLeft),
         correctAnswers: get().correctAnswers + 1,
-        streak: get().streak + 1,
-        maxStreak: Math.max(get().maxStreak, get().streak + 1),
-        highlightedCountries: [{ country, color: 'green' }],
+        streak: streak + 1,
+        maxStreak: Math.max(get().maxStreak, streak + 1),
+        highlightedCountries: [{ country: pendingSelection, color: 'green' }],
       });
     } else {
       // Ошибочный ответ — сначала показываем ошибку красным
       set({
-        selectedCountry: country,
+        selectedCountry: pendingSelection,
+        pendingSelection: null,
         isCorrect,
         phase: GamePhase.FEEDBACK,
         timerActive: false,
-        highlightedCountries: [{ country, color: 'red' }],
+        highlightedCountries: [{ country: pendingSelection, color: 'red' }],
       });
 
       // Затем показываем правильный ответ зелёным (через 800мс)
       setTimeout(() => {
         set({
           highlightedCountries: [
-            { country, color: 'red' },
+            { country: pendingSelection, color: 'red' },
             { country: currentQuestion, color: 'green' },
           ],
         });
 
         // Перемещаем камеру на правильную страну (через 100мс после подсветки)
         setTimeout(() => {
-          const event = new CustomEvent('focusOnCountry', { 
-            detail: { country: currentQuestion } 
+          const event = new CustomEvent('focusOnCountry', {
+            detail: { country: currentQuestion }
           });
           window.dispatchEvent(event);
         }, 100);
       }, 800);
     }
+  },
+
+  cancelSelection: () => {
+    // Отменяем выбор страны
+    set({
+      pendingSelection: null,
+    });
   },
 
   updateTimer: (timeLeft) => set({ timeLeft }),

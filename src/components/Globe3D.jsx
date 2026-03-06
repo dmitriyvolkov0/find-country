@@ -11,6 +11,7 @@ export function Globe3D({ onCountryClick }) {
     selectedCountry,
     phase,
     highlightedCountries,
+    pendingSelection, // Добавляем pendingSelection
   } = useGameStore();
 
   const [countries, setCountries] = useState({ features: [] });
@@ -102,6 +103,7 @@ export function Globe3D({ onCountryClick }) {
 
     const isSelected = selectedCountry?.properties?.ISO_A3 === country.properties?.ISO_A3;
     const isTarget = currentQuestion.properties?.ISO_A3 === country.properties?.ISO_A3;
+    const isPending = pendingSelection?.properties?.ISO_A3 === country.properties?.ISO_A3;
 
     // Проверяем массив подсветки
     if (highlightedCountries && highlightedCountries.length > 0) {
@@ -111,6 +113,11 @@ export function Globe3D({ onCountryClick }) {
       if (highlighted) {
         return highlighted.color === 'red' ? '#ef4444' : '#22c55e';
       }
+    }
+
+    // Подсветка страны, ожидающей подтверждения (синий/голубой)
+    if (isPending && phase === GamePhase.QUESTION) {
+      return '#60a5fa';
     }
 
     if (phase === GamePhase.FEEDBACK) {
@@ -128,7 +135,7 @@ export function Globe3D({ onCountryClick }) {
     }
 
     return '#4a5568';
-  }, [currentQuestion, selectedCountry, phase, hoveredCountry, highlightedCountries]);
+  }, [currentQuestion, selectedCountry, phase, hoveredCountry, highlightedCountries, pendingSelection]);
 
   /**
    * Определение высоты страны
