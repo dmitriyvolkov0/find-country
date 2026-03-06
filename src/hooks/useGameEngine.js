@@ -172,17 +172,23 @@ export function useGameEngine(onGameComplete, savedStats) {
    * Обработка событий VK Bridge
    */
   useEffect(() => {
-    const handleLocationChange = (e) => {
-      // Пауза при сворачивании приложения
-      if (e.detail.location === 'background') {
+    const handleBridgeEvent = (e) => {
+      if (e?.detail?.type !== 'VKWebAppLocationChanged') return;
+
+      const location =
+        e.detail?.data?.location ??
+        e.detail?.location;
+
+      if (location === 'background') {
         stopTimer();
       }
     };
 
-    vkBridge.subscribe('VKWebAppLocationChanged', handleLocationChange);
+    // vkBridge.subscribe принимает один аргумент: callback(event)
+    vkBridge.subscribe(handleBridgeEvent);
 
     return () => {
-      vkBridge.unsubscribe('VKWebAppLocationChanged', handleLocationChange);
+      vkBridge.unsubscribe(handleBridgeEvent);
     };
   }, [stopTimer]);
 
