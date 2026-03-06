@@ -181,10 +181,13 @@ const useGameStore = create((set, get) => ({
   },
 
   selectCountry: (country) => {
-    // Устанавливаем страну как ожидающую подтверждения
-    set({
-      pendingSelection: country,
-    });
+    // Устанавливаем страну как ожидающую подтверждения с небольшой задержкой
+    // для лучшего UX (пользователь видит результат клика перед появлением модального окна)
+    setTimeout(() => {
+      set({
+        pendingSelection: country,
+      });
+    }, 200); // 400 мс задержка
   },
 
   confirmSelection: () => {
