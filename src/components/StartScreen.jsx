@@ -75,16 +75,6 @@ export function StartScreen({ onPlay, onViewMode }) {
             Режим просмотра
           </button>
         </div>
-
-        {/* Подсказки */}
-        <div className="mt-6 space-y-2">
-          <p className="text-blue-300 text-xs sm:text-sm">
-            <span className="font-semibold">Игра:</span> Нажмите на страну на глобусе,<br />которую показывает задание
-          </p>
-          <p className="text-blue-300 text-xs sm:text-sm">
-            <span className="font-semibold">Просмотр:</span> Изучайте глобус с названиями всех стран
-          </p>
-        </div>
       </div>
     </div>
   );
