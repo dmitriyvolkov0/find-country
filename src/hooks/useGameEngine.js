@@ -21,17 +21,19 @@ export function useGameEngine(onGameComplete) {
     settings,
     updateTimer,
     stopTimer,
+    selectCountry,
   } = useGameStore();
 
   const timerRef = useRef(null);
   const startTimeRef = useRef(null);
+  const prevTimeLeftRef = useRef(timeLeft);
 
   /**
    * Вибрация при событиях (через VK Bridge)
    */
   const vibrate = useCallback(async (type = 'light') => {
     if (!settings.vibrationsEnabled) return;
-    
+
     try {
       if (vkBridge.isWebView()) {
         await vkBridge.send('VKWebAppTapticNotificationOccurred', { type });
@@ -54,12 +56,33 @@ export function useGameEngine(onGameComplete) {
   }, [settings.vibrationsEnabled]);
 
   /**
-   * Обработка истечения времени
+   * Обработка истечения времени - завершение раунда
    */
   const handleTimeUp = useCallback(() => {
     stopTimer();
     vibrate('error');
-  }, [stopTimer, vibrate]);
+    
+    // Устанавливаем флаг неправильного ответа и подсвечиваем правильную страну
+    useGameStore.setState({
+      phase: GamePhase.FEEDBACK,
+      timerActive: false,
+      isCorrect: false,
+      highlightedCountries: [
+        { country: currentQuestion, color: 'green' },
+      ],
+    });
+    
+    // Перемещаем камеру на правильную страну
+    const event = new CustomEvent('focusOnCountry', {
+      detail: { country: currentQuestion }
+    });
+    window.dispatchEvent(event);
+    
+    // Переходим к следующему вопросу с задержкой
+    setTimeout(() => {
+      useGameStore.getState().nextQuestion();
+    }, 2500);
+  }, [stopTimer, vibrate, currentQuestion]);
 
   /**
    * Таймер обратного отсчёта
@@ -74,13 +97,23 @@ export function useGameEngine(onGameComplete) {
     }
 
     startTimeRef.current = Date.now();
-    
+
     timerRef.current = setInterval(() => {
       const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
       const remaining = Math.max(0, timeLeft - elapsed);
-      
+
       updateTimer(remaining);
-      
+
+      // Вибрация-предупреждение за 30 и 10 секунд
+      if (prevTimeLeftRef.current > 30 && remaining === 30) {
+        vibrate('error');
+      }
+      if (prevTimeLeftRef.current > 10 && remaining === 10) {
+        vibrate('error');
+      }
+
+      prevTimeLeftRef.current = remaining;
+
       if (remaining <= 0) {
         handleTimeUp();
       }
@@ -92,7 +125,7 @@ export function useGameEngine(onGameComplete) {
         timerRef.current = null;
       }
     };
-  }, [timerActive, phase, timeLeft, updateTimer, handleTimeUp]);
+  }, [timerActive, phase, timeLeft, updateTimer, handleTimeUp, vibrate]);
 
   /**
    * Сохранение статистики при завершении игры

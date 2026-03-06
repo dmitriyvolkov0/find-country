@@ -233,6 +233,7 @@ const useGameStore = create((set, get) => ({
       selectedCountry: null,
       pendingSelection: null,
       isCorrect: null,
+      highlightedCountries: [],
       usedCountries: [...usedCountries, nextCountry],
     });
   },

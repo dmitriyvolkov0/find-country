@@ -156,7 +156,7 @@ export function QuestionScreen() {
       </div>
 
       {/* Таймер */}
-      <div className="absolute bottom-5 left-0 right-0 z-10 p-2 sm:p-3 md:p-4 safe-area-bottom">
+      <div className="absolute bottom-5 left-0 right-0 z-10 p-5 safe-area-bottom">
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-between text-xs sm:text-sm text-white mb-2">
             <span>Время</span>
