@@ -34,7 +34,7 @@ export function ModeSelectionScreen({ onModeSelect, onBack }) {
         </div>
 
         {/* Карточки режимов */}
-        <div className="space-y-3 sm:space-y-4 mb-8">
+        <div className="space-y-3 sm:space-y-4 mb-4">
           {modes.map((mode) => (
             <button
               key={mode.id}
@@ -92,7 +92,7 @@ export function ModeSelectionScreen({ onModeSelect, onBack }) {
             transform transition-all duration-200 
             hover:scale-105 active:scale-95
             focus:outline-none focus:ring-2 focus:ring-white/40 focus:ring-offset-2 focus:ring-offset-blue-900
-            flex items-center gap-2 mx-auto"
+            flex items-center gap-2 mx-auto w-full justify-center"
           aria-label="Назад"
         >
           <svg
@@ -111,25 +111,6 @@ export function ModeSelectionScreen({ onModeSelect, onBack }) {
           </svg>
           Назад
         </button>
-
-        {/* Подсказки для режимов */}
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs sm:text-sm text-blue-200">
-          <div className="p-3 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10">
-            <span className="font-semibold text-yellow-300">⚡ Быстрый</span>
-            <br />
-            Для быстрой игры
-          </div>
-          <div className="p-3 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10">
-            <span className="font-semibold text-blue-300">🎯 Обычный</span>
-            <br />
-            Классическая игра
-          </div>
-          <div className="p-3 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10">
-            <span className="font-semibold text-purple-300">♾️ Бесконечный</span>
-            <br />
-            Играй до ошибки
-          </div>
-        </div>
       </div>
     </div>
   );

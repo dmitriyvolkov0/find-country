@@ -9,14 +9,14 @@ export function StartScreen({ onPlay, onViewMode }) {
 
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 z-20">
-      <div className="text-center px-4 sm:px-6 md:px-8 max-w-md w-full">
+      <div className="text-center px-4 sm:px-6 md:px-8 max-w-[500px] w-full">
         {/* Логотип / Заголовок */}
         <div className="mb-8">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-2 tracking-tight">
-            Map It!
+            Найди страну
           </h1>
           <p className="text-blue-200 text-sm sm:text-base md:text-lg">
-            Угадай страну на карте
+            Покажи всем на что ты способен!
           </p>
         </div>
 
@@ -42,7 +42,7 @@ export function StartScreen({ onPlay, onViewMode }) {
 
         {/* Статистика */}
         {savedStats && (
-          <div className="mb-6 p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+          <div className="mb-6 p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 max-w-xs mx-auto">
             <p className="text-blue-200 text-xs sm:text-sm mb-2">Ваш лучший результат</p>
             <div className="flex justify-center gap-4 sm:gap-6">
               <div>

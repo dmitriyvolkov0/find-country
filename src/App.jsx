@@ -12,7 +12,7 @@ import GameOverScreen from './components/GameOverScreen';
 import ViewScreen from './components/ViewScreen';
 
 /**
- * Корневой компонент приложения Map It!
+ * Корневой компонент приложения
  * Инициализирует VK Bridge, загружает данные и управляет состоянием игры
  */
 export default function App() {

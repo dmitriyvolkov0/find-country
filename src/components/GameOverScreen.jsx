@@ -156,11 +156,11 @@ export function GameOverScreen({ onRestart, onBackToMenu }) {
 async function shareResult(score, accuracy, totalQuestions) {
   try {
     await vkBridge.send('VKWebAppShare', {
-      link: `Я набрал ${score} очков в Map It! Моя точность: ${accuracy}%`,
+      link: `Я набрал ${score} очков в "Найди страну"! Моя точность: ${accuracy}%`,
     });
   } catch (err) {
     // Fallback: копирование в буфер
-    const text = `Я набрал ${score} очков в Map It! Моя точность: ${accuracy}% (${totalQuestions} вопросов). Попробуй побить мой рекорд!`;
+    const text = `Я набрал ${score} очков в "Найди страну"! Моя точность: ${accuracy}% (${totalQuestions} вопросов). Попробуй побить мой рекорд!`;
     try {
       await navigator.clipboard.writeText(text);
       alert('Результат скопирован в буфер обмена!');
