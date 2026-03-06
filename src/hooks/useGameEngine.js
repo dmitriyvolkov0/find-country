@@ -1,12 +1,12 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
 import vkBridge from '@vkontakte/vk-bridge';
-import useGameStore, { GamePhase } from '../store/gameStore';
+import useGameStore, { GamePhase, GameMode } from '../store/gameStore';
 
 /**
  * Хук для управления игровой логикой
  * Обрабатывает таймер, вибрацию, сохранение прогресса
  */
-export function useGameEngine(onGameComplete) {
+export function useGameEngine(onGameComplete, savedStats) {
   const {
     phase,
     timeLeft,
@@ -22,11 +22,13 @@ export function useGameEngine(onGameComplete) {
     updateTimer,
     stopTimer,
     selectCountry,
+    gameMode,
   } = useGameStore();
 
   const timerRef = useRef(null);
   const startTimeRef = useRef(null);
   const prevTimeLeftRef = useRef(timeLeft);
+  const statsSavedRef = useRef(false);
 
   /**
    * Вибрация при событиях (через VK Bridge)
@@ -128,21 +130,43 @@ export function useGameEngine(onGameComplete) {
   }, [timerActive, phase, timeLeft, updateTimer, handleTimeUp, vibrate]);
 
   /**
-   * Сохранение статистики при завершении игры
+   * Сохранение рекорда после каждого раунда (если текущий счёт лучше предыдущего)
    */
   useEffect(() => {
-    if (phase === GamePhase.GAME_OVER && onGameComplete) {
+    // Сохраняем после правильного ответа в фазе FEEDBACK
+    if (phase === GamePhase.FEEDBACK && score > 0 && savedStats && score > savedStats.bestScore) {
       const stats = {
         score,
         correctAnswers,
         totalQuestions,
         maxStreak,
-        accuracy: Math.round((correctAnswers / totalQuestions) * 100),
+        accuracy: totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0,
         timestamp: Date.now(),
       };
       onGameComplete(stats);
     }
-  }, [phase, score, correctAnswers, totalQuestions, maxStreak, onGameComplete]);
+  }, [phase, score, correctAnswers, totalQuestions, maxStreak, onGameComplete, savedStats]);
+
+  /**
+   * Сохранение статистики при завершении игры
+   */
+  useEffect(() => {
+    if (phase === GamePhase.GAME_OVER && onGameComplete && !statsSavedRef.current) {
+      statsSavedRef.current = true; // Помечаем, что статистика сохранена
+
+      const stats = {
+        score,
+        correctAnswers,
+        totalQuestions: gameMode === GameMode.ENDLESS ? questionIndex : totalQuestions,
+        maxStreak,
+        accuracy: gameMode === GameMode.ENDLESS && questionIndex > 0
+          ? Math.round((correctAnswers / questionIndex) * 100)
+          : Math.round((correctAnswers / totalQuestions) * 100),
+        timestamp: Date.now(),
+      };
+      onGameComplete(stats);
+    }
+  }, [phase, score, correctAnswers, totalQuestions, maxStreak, onGameComplete, gameMode, questionIndex]);
 
   /**
    * Обработка событий VK Bridge
@@ -161,6 +185,13 @@ export function useGameEngine(onGameComplete) {
       vkBridge.unsubscribe('VKWebAppLocationChanged', handleLocationChange);
     };
   }, [stopTimer]);
+
+  // Сбрасываем флаг сохранения при начале нового вопроса (новая игра)
+  useEffect(() => {
+    if (phase === GamePhase.QUESTION && questionIndex === 0) {
+      statsSavedRef.current = false;
+    }
+  }, [phase, questionIndex]);
 
   return {
     timeLeft,

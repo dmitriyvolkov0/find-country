@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import vkBridge from '@vkontakte/vk-bridge';
 
 /**
  * Состояния игры
@@ -344,7 +345,16 @@ const useGameStore = create((set, get) => ({
 
   clearHighlightedCountries: () => set({ highlightedCountries: [] }),
 
-  updateSettings: (newSettings) => set({ settings: { ...get().settings, ...newSettings } }),
+  updateSettings: (newSettings) => {
+    const updated = { ...get().settings, ...newSettings };
+    set({ settings: updated });
+    
+    // Сохраняем настройки в VK Storage
+    vkBridge.send('VKWebAppStorageSet', {
+      key: 'mapit_settings',
+      value: JSON.stringify(updated),
+    }).catch(err => console.error('Settings save error:', err));
+  },
 
   loadSavedStats: (stats) => set({ savedStats: stats }),
 }));

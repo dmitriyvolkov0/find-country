@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import vkBridge from '@vkontakte/vk-bridge';
 import useGameStore, { GamePhase } from './store/gameStore';
-import { useVKStorage, useSettings } from './hooks/useVKStorage';
+import { useVKStorage } from './hooks/useVKStorage';
 import { useGameEngine, useResponsive } from './hooks/useGameEngine';
 import Globe3D from './components/Globe3D';
 import StartScreen from './components/StartScreen';
@@ -32,14 +32,18 @@ export default function App() {
   } = useGameStore();
 
   const { save: saveStats } = useVKStorage();
-  const { settings } = useSettings();
 
   /**
    * Обработка завершения игры
    */
   const handleGameComplete = useCallback(async (stats) => {
     try {
-      // Загружаем предыдущие данные
+      // Не сохраняем, если игрок набрал 0 очков за игру
+      if (stats.score === 0) {
+        return;
+      }
+    
+      // Загружаем предыдущие данные из store или используем значения по умолчанию
       const previousStats = savedStats || {
         bestScore: 0,
         bestAccuracy: 0,
@@ -56,18 +60,23 @@ export default function App() {
         lastPlayed: Date.now(),
       };
 
-      // Сохраняем в VK Storage
-      await saveStats(newStats);
+      // Сохраняем напрямую через VK Bridge
+      await vkBridge.send('VKWebAppStorageSet', {
+        key: 'mapit_game_stats',
+        value: JSON.stringify(newStats),
+      });
+
+      // Обновляем состояние в store
       loadSavedStats(newStats);
     } catch (err) {
-      console.error('Error saving stats:', err);
+      console.error('Error in handleGameComplete:', err);
     }
-  }, [savedStats, saveStats, loadSavedStats]);
+  }, [savedStats, loadSavedStats]);
 
   /**
    * Хук игровой логики
    */
-  useGameEngine(handleGameComplete);
+  useGameEngine(handleGameComplete, savedStats);
 
   /**
    * Загрузка данных о странах (теперь внутри Globe3D)
@@ -82,41 +91,39 @@ export default function App() {
   }, []);
 
   /**
-   * Инициализация VK Bridge
+   * Инициализация VK Bridge и загрузка статистики
    */
   useEffect(() => {
-    const initVK = async () => {
-      // Проверяем, работает ли VK Storage
-      if (vkBridge.isWebView()) {
-        try {
-          // Загрузка сохранённой статистики
-          const result = await vkBridge.send('VKWebAppStorageGet', {
-            keys: ['mapit_game_stats'],
-          });
-          
-          const value = result?.data?.[0]?.value;
-          if (value) {
-            const stats = JSON.parse(value);
-            loadSavedStats(stats);
-          }
-        } catch (storageErr) {
-          console.log('VK Storage error:', storageErr);
-          // Fallback на localStorage
-          const localStats = localStorage.getItem('mapit_game_stats');
-          if (localStats) {
-            loadSavedStats(JSON.parse(localStats));
-          }
+    const loadData = async () => {
+      try {
+        // Загрузка сохранённой статистики из VK Storage
+        const statsResult = await vkBridge.send('VKWebAppStorageGet', {
+          keys: ['mapit_game_stats'],
+        });
+
+        // VK Storage возвращает { keys: [{ key, value }] }
+        const statsValue = statsResult?.keys?.[0]?.value;
+        if (statsValue) {
+          const stats = JSON.parse(statsValue);
+          loadSavedStats(stats);
         }
-      } else {
-        // Не VK WebView - используем localStorage
-        const localStats = localStorage.getItem('mapit_game_stats');
-        if (localStats) {
-          loadSavedStats(JSON.parse(localStats));
+
+        // Загрузка настроек из VK Storage
+        const settingsResult = await vkBridge.send('VKWebAppStorageGet', {
+          keys: ['mapit_settings'],
+        });
+
+        const settingsValue = settingsResult?.keys?.[0]?.value;
+        if (settingsValue) {
+          const settings = JSON.parse(settingsValue);
+          useGameStore.getState().updateSettings(settings);
         }
+      } catch (err) {
+        console.error('VK Storage load error:', err);
       }
     };
 
-    initVK();
+    loadData();
   }, []);
 
   /**

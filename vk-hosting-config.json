@@ -1,6 +1,6 @@
 {
   "static_path": "build",
-  "app_id": 54472376,
+  "app_id": 54457175,
   "noprompt": true,
   "endpoints": {
     "mobile": "index.html",

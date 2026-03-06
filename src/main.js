@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client';
 import vkBridge from '@vkontakte/vk-bridge';
 import { AppConfig } from './AppConfig';
 
+// Инициализируем VK Bridge при старте
 vkBridge.send('VKWebAppInit');
 
 createRoot(document.getElementById('root')).render(<AppConfig />);

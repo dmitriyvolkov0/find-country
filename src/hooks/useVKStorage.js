@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import vkBridge from '@vkontakte/vk-bridge';
 
 const STORAGE_KEY = 'mapit_game_stats';
@@ -19,12 +19,13 @@ export function useVKStorage() {
     try {
       setLoading(true);
       setError(null);
-      
+
       const result = await vkBridge.send('VKWebAppStorageGet', {
         keys: [STORAGE_KEY],
       });
-      
-      const value = result.data?.[0]?.value;
+
+      // VK Storage возвращает { keys: [{ key, value }] }
+      const value = result.keys?.[0]?.value;
       if (value) {
         const parsed = JSON.parse(value);
         setData(parsed);
@@ -34,15 +35,6 @@ export function useVKStorage() {
     } catch (err) {
       console.error('VK Storage load error:', err);
       setError(err.message);
-      // Fallback: пробуем прочитать из localStorage для отладки
-      try {
-        const localData = localStorage.getItem(STORAGE_KEY);
-        if (localData) {
-          const parsed = JSON.parse(localData);
-          setData(parsed);
-          return parsed;
-        }
-      } catch {}
       return null;
     } finally {
       setLoading(false);
@@ -56,27 +48,17 @@ export function useVKStorage() {
     try {
       setError(null);
       setData(newData);
-      
+
       await vkBridge.send('VKWebAppStorageSet', {
         key: STORAGE_KEY,
         value: JSON.stringify(newData),
       });
-      
-      // Дублируем в localStorage для надёжности
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
-      
+
       return true;
     } catch (err) {
       console.error('VK Storage save error:', err);
       setError(err.message);
-      // Fallback: сохраняем в localStorage
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
-        return true;
-      } catch (localErr) {
-        console.error('LocalStorage save error:', localErr);
-        return false;
-      }
+      return false;
     }
   }, []);
 
@@ -88,13 +70,10 @@ export function useVKStorage() {
       await vkBridge.send('VKWebAppStorageDelete', {
         keys: [STORAGE_KEY],
       });
-      localStorage.removeItem(STORAGE_KEY);
       setData(null);
       return true;
     } catch (err) {
       console.error('VK Storage clear error:', err);
-      localStorage.removeItem(STORAGE_KEY);
-      setData(null);
       return false;
     }
   }, []);
@@ -103,30 +82,18 @@ export function useVKStorage() {
 }
 
 /**
- * Хук для загрузки настроек из localStorage
+ * Хук для работы с настройками (управление через gameStore)
  */
 export function useSettings() {
-  const [settings, setSettings] = useState(() => {
-    try {
-      const saved = localStorage.getItem('mapit_settings');
-      return saved ? JSON.parse(saved) : {
-        soundEnabled: true,
-        vibrationsEnabled: true,
-        language: 'ru',
-      };
-    } catch {
-      return {
-        soundEnabled: true,
-        vibrationsEnabled: true,
-        language: 'ru',
-      };
-    }
+  const [settings, setSettings] = useState({
+    soundEnabled: true,
+    vibrationsEnabled: true,
+    language: 'ru',
   });
 
   const updateSettings = useCallback((newSettings) => {
     setSettings(prev => {
       const updated = { ...prev, ...newSettings };
-      localStorage.setItem('mapit_settings', JSON.stringify(updated));
       return updated;
     });
   }, []);
