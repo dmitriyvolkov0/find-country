@@ -1,7 +1,9 @@
 import { useState, useCallback } from 'react';
 import vkBridge from '@vkontakte/vk-bridge';
+import useGameStore from '../store/gameStore';
 
 const STORAGE_KEY = 'mapit_game_stats';
+const STARS_KEY = 'mapit_stars';
 
 /**
  * Хук для работы с VK Storage
@@ -99,6 +101,58 @@ export function useSettings() {
   }, []);
 
   return { settings, updateSettings };
+}
+
+/**
+ * Хук для управления звёздами (валюта игры)
+ */
+export function useStars() {
+  const stars = useGameStore((state) => state.stars);
+  const setStars = useGameStore((state) => state.setStars);
+
+  /**
+   * Добавление звёзд
+   */
+  const addStars = useCallback(async (amount) => {
+    const newStars = stars + amount;
+    setStars(newStars);
+
+    try {
+      await vkBridge.send('VKWebAppStorageSet', {
+        key: STARS_KEY,
+        value: String(newStars),
+      });
+      return true;
+    } catch (err) {
+      console.error('Stars save error:', err);
+      return false;
+    }
+  }, [stars, setStars]);
+
+  /**
+   * Трата звёзд
+   */
+  const spendStars = useCallback(async (amount) => {
+    if (stars < amount) {
+      return false; // Недостаточно звёзд
+    }
+
+    const newStars = stars - amount;
+    setStars(newStars);
+
+    try {
+      await vkBridge.send('VKWebAppStorageSet', {
+        key: STARS_KEY,
+        value: String(newStars),
+      });
+      return true;
+    } catch (err) {
+      console.error('Stars spend error:', err);
+      return false;
+    }
+  }, [stars, setStars]);
+
+  return { stars, addStars, spendStars };
 }
 
 export default useVKStorage;

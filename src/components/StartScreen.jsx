@@ -1,14 +1,31 @@
 import React from 'react';
 import useGameStore from '../store/gameStore';
+import { useStars } from '../hooks/useVKStorage';
 
 /**
  * Экран приветствия / старта игры
  */
 export function StartScreen({ onPlay, onViewMode }) {
   const { savedStats } = useGameStore();
+  const { stars } = useStars();
 
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 z-20">
+      {/* Звёзды в правом верхнем углу */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20">
+        <div className="flex items-center gap-2 px-4 py-2 bg-yellow-500/20 backdrop-blur-sm rounded-lg border border-yellow-400/30 shadow-lg">
+          <svg
+            className="w-6 h-6 text-yellow-400"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+            aria-hidden="true"
+          >
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+          </svg>
+          <span className="text-yellow-400 font-bold text-lg">{stars}</span>
+        </div>
+      </div>
+
       <div className="text-center px-4 sm:px-6 md:px-8 max-w-[500px] w-full">
         {/* Логотип / Заголовок */}
         <div className="mb-8">

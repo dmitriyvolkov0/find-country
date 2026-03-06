@@ -129,6 +129,7 @@ const useGameStore = create((set, get) => ({
 
   // Сохранённые данные из VK Storage
   savedStats: null,
+  stars: 0, // Валюта игры (звёзды)
 
   // Настройки (localStorage)
   settings: {
@@ -139,6 +140,9 @@ const useGameStore = create((set, get) => ({
 
   // Действия
   setPhase: (phase) => set({ phase }),
+
+  // Установка количества звёзд
+  setStars: (stars) => set({ stars }),
 
   startGame: async (mode) => {
     // Определяем количество раундов в зависимости от режима

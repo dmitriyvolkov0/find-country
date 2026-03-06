@@ -28,6 +28,8 @@ export default function App() {
   const startViewMode = useGameStore((state) => state.startViewMode);
   const stopViewMode = useGameStore((state) => state.stopViewMode);
   const setPhase = useGameStore((state) => state.setPhase);
+  const setStars = useGameStore((state) => state.setStars);
+  const stars = useGameStore((state) => state.stars);
 
   const { save: saveStats } = useVKStorage();
 
@@ -106,6 +108,24 @@ export default function App() {
           loadSavedStats(stats);
         }
 
+        // Загрузка звёзд из VK Storage
+        const starsResult = await vkBridge.send('VKWebAppStorageGet', {
+          keys: ['mapit_stars'],
+        });
+
+        const starsValue = starsResult?.keys?.[0]?.value;
+        if (starsValue) {
+          const starsCount = parseInt(starsValue, 10);
+          setStars(starsCount);
+        } else {
+          // Первый запуск — начисляем 25 звёзд
+          await vkBridge.send('VKWebAppStorageSet', {
+            key: 'mapit_stars',
+            value: '25',
+          });
+          setStars(25);
+        }
+
         // Загрузка настроек из VK Storage
         const settingsResult = await vkBridge.send('VKWebAppStorageGet', {
           keys: ['mapit_settings'],
@@ -117,7 +137,7 @@ export default function App() {
           useGameStore.getState().updateSettings(settings);
         }
       } catch (err) {
-        
+
       }
     };
 
