@@ -53,7 +53,7 @@ export function useGameEngine(onGameComplete, savedStats) {
         }
       }
     } catch (err) {
-      console.log('Vibration not supported:', err);
+      console.log('Вибрация не поддерживается на данном устройстве');
     }
   }, [settings.vibrationsEnabled]);
 

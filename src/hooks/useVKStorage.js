@@ -33,7 +33,7 @@ export function useVKStorage() {
       }
       return null;
     } catch (err) {
-      console.error('VK Storage load error:', err);
+      console.error('VK Storage load error!');
       setError(err.message);
       return null;
     } finally {

@@ -77,7 +77,7 @@ export async function loadCountriesData() {
     
     return globalCountriesData;
   } catch (err) {
-    console.error('Error loading countries data:', err);
+    console.error('Error loading countries data!');
     return [];
   }
 }
@@ -353,7 +353,7 @@ const useGameStore = create((set, get) => ({
     vkBridge.send('VKWebAppStorageSet', {
       key: 'mapit_settings',
       value: JSON.stringify(updated),
-    }).catch(err => console.error('Settings save error:', err));
+    }).catch(err => console.error('Settings save error!'));
   },
 
   loadSavedStats: (stats) => set({ savedStats: stats }),

@@ -67,7 +67,7 @@ export default function App() {
       // Обновляем состояние в store
       loadSavedStats(newStats);
     } catch (err) {
-      console.error('Error in handleGameComplete:', err);
+
     }
   }, [savedStats, loadSavedStats]);
 
@@ -117,7 +117,7 @@ export default function App() {
           useGameStore.getState().updateSettings(settings);
         }
       } catch (err) {
-        console.error('VK Storage load error:', err);
+        
       }
     };
 

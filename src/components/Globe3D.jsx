@@ -75,7 +75,7 @@ export function Globe3D({ onCountryClick }) {
 
         setCountryLabels(labels);
       } catch (err) {
-        console.error('Error loading countries data:', err);
+        
       }
     };
 
