@@ -18,18 +18,16 @@ import ViewScreen from './components/ViewScreen';
 export default function App() {
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-  const {
-    phase,
-    startGame,
-    nextQuestion,
-    selectCountry,
-    loadSavedStats,
-    savedStats,
-    clearHighlightedCountries,
-    startViewMode,
-    stopViewMode,
-    setPhase,
-  } = useGameStore();
+  const phase = useGameStore((state) => state.phase);
+  const startGame = useGameStore((state) => state.startGame);
+  const nextQuestion = useGameStore((state) => state.nextQuestion);
+  const selectCountry = useGameStore((state) => state.selectCountry);
+  const loadSavedStats = useGameStore((state) => state.loadSavedStats);
+  const savedStats = useGameStore((state) => state.savedStats);
+  const clearHighlightedCountries = useGameStore((state) => state.clearHighlightedCountries);
+  const startViewMode = useGameStore((state) => state.startViewMode);
+  const stopViewMode = useGameStore((state) => state.stopViewMode);
+  const setPhase = useGameStore((state) => state.setPhase);
 
   const { save: saveStats } = useVKStorage();
 
