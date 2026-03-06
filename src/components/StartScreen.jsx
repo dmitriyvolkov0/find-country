@@ -4,7 +4,7 @@ import useGameStore from '../store/gameStore';
 /**
  * Экран приветствия / старта игры
  */
-export function StartScreen({ onStart, onViewMode }) {
+export function StartScreen({ onPlay, onViewMode }) {
   const { savedStats } = useGameStore();
 
   return (
@@ -60,11 +60,11 @@ export function StartScreen({ onStart, onViewMode }) {
         {/* Кнопки */}
         <div className="space-y-3 w-full max-w-xs mx-auto">
           <button
-            onClick={onStart}
+            onClick={onPlay}
             className="w-full px-6 py-3 sm:py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-semibold text-lg sm:text-xl rounded-xl shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-blue-900"
-            aria-label="Начать игру"
+            aria-label="Играть"
           >
-            Начать игру
+            Играть
           </button>
 
           <button

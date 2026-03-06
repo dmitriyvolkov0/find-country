@@ -5,6 +5,7 @@ import { useVKStorage, useSettings } from './hooks/useVKStorage';
 import { useGameEngine, useResponsive } from './hooks/useGameEngine';
 import Globe3D from './components/Globe3D';
 import StartScreen from './components/StartScreen';
+import ModeSelectionScreen from './components/ModeSelectionScreen';
 import QuestionScreen from './components/QuestionScreen';
 import FeedbackScreen from './components/FeedbackScreen';
 import GameOverScreen from './components/GameOverScreen';
@@ -27,6 +28,7 @@ export default function App() {
     clearHighlightedCountries,
     startViewMode,
     stopViewMode,
+    setPhase,
   } = useGameStore();
 
   const { save: saveStats } = useVKStorage();
@@ -118,10 +120,17 @@ export default function App() {
   }, []);
 
   /**
-   * Начало игры
+   * Переход к экрану выбора режима
    */
-  const handleStart = useCallback(async () => {
-    await startGame(null);
+  const handlePlay = useCallback(() => {
+    setPhase(GamePhase.MODE_SELECTION);
+  }, [setPhase]);
+
+  /**
+   * Начало игры с выбранным режимом
+   */
+  const handleStart = useCallback(async (mode) => {
+    await startGame(mode);
   }, [startGame]);
 
   /**
@@ -146,6 +155,7 @@ export default function App() {
     clearHighlightedCountries();
     useGameStore.setState({
       phase: GamePhase.START,
+      gameMode: null,
       score: 0,
       questionIndex: 0,
       correctAnswers: 0,
@@ -172,7 +182,15 @@ export default function App() {
   const renderPhase = () => {
     switch (phase) {
       case GamePhase.START:
-        return <StartScreen onStart={handleStart} onViewMode={handleViewMode} />;
+        return <StartScreen onPlay={handlePlay} onViewMode={handleViewMode} />;
+
+      case GamePhase.MODE_SELECTION:
+        return (
+          <ModeSelectionScreen
+            onModeSelect={handleStart}
+            onBack={() => setPhase(GamePhase.START)}
+          />
+        );
 
       case GamePhase.QUESTION:
         return <QuestionScreen />;
@@ -183,7 +201,7 @@ export default function App() {
       case GamePhase.GAME_OVER:
         return (
           <GameOverScreen
-            onRestart={handleStart}
+            onRestart={() => handleStart(useGameStore.getState().gameMode)}
             onBackToMenu={handleBackToMenu}
           />
         );

@@ -5,10 +5,47 @@ import { create } from 'zustand';
  */
 export const GamePhase = {
   START: 'start',
+  MODE_SELECTION: 'mode_selection',
   QUESTION: 'question',
   FEEDBACK: 'feedback',
   GAME_OVER: 'game_over',
   VIEW: 'view', // Режим просмотра
+};
+
+/**
+ * Режимы игры
+ */
+export const GameMode = {
+  QUICK: 'quick',       // 3 раунда
+  STANDARD: 'standard', // 10 раундов
+  ENDLESS: 'endless',   // Бесконечный режим
+};
+
+/**
+ * Конфигурация режимов игры
+ */
+export const GAME_MODE_CONFIG = {
+  [GameMode.QUICK]: {
+    name: 'Быстрый',
+    description: '3 раунда',
+    rounds: 3,
+    icon: '⚡',
+    color: 'from-yellow-500 to-orange-600',
+  },
+  [GameMode.STANDARD]: {
+    name: 'Обычный',
+    description: '10 раундов',
+    rounds: 10,
+    icon: '🎯',
+    color: 'from-blue-500 to-cyan-600',
+  },
+  [GameMode.ENDLESS]: {
+    name: 'Бесконечный',
+    description: 'Играй до ошибки',
+    rounds: Infinity,
+    icon: '♾️',
+    color: 'from-purple-500 to-pink-600',
+  },
 };
 
 // Глобальное хранилище данных о странах
@@ -58,6 +95,9 @@ const useGameStore = create((set, get) => ({
   // Состояние игры
   phase: GamePhase.START,
 
+  // Режим игры
+  gameMode: null,
+
   // Текущий вопрос
   currentQuestion: null,
   questionIndex: 0,
@@ -99,23 +139,25 @@ const useGameStore = create((set, get) => ({
   // Действия
   setPhase: (phase) => set({ phase }),
 
-  startGame: async (countriesData) => {
-    // Если данные не переданы, загружаем их
-    let dataToUse = countriesData;
-    if (!dataToUse || dataToUse.length === 0) {
-      dataToUse = await loadCountriesData();
-    }
+  startGame: async (mode) => {
+    // Определяем количество раундов в зависимости от режима
+    const config = GAME_MODE_CONFIG[mode];
+    const rounds = mode === GameMode.ENDLESS ? 1000 : config.rounds;
 
+    // Загружаем данные о странах
+    let dataToUse = await loadCountriesData();
     if (dataToUse.length === 0) {
       console.error('No countries data available');
       return;
     }
 
+    // Перемешиваем и выбираем страны
     const shuffled = [...dataToUse].sort(() => Math.random() - 0.5);
-    const selected = shuffled.slice(0, get().totalQuestions);
+    const selected = shuffled.slice(0, Math.min(rounds, dataToUse.length));
 
     set({
       phase: GamePhase.QUESTION,
+      gameMode: mode,
       currentQuestion: selected[0],
       questionIndex: 0,
       score: 0,
@@ -128,6 +170,7 @@ const useGameStore = create((set, get) => ({
       isCorrect: null,
       countriesData: selected,
       usedCountries: [selected[0]],
+      totalQuestions: rounds,
     });
   },
 
@@ -146,6 +189,7 @@ const useGameStore = create((set, get) => ({
   stopViewMode: () => {
     set({
       phase: GamePhase.START,
+      gameMode: null,
       currentQuestion: null,
       selectedCountry: null,
       pendingSelection: null,
@@ -153,15 +197,28 @@ const useGameStore = create((set, get) => ({
   },
 
   nextQuestion: () => {
-    const { questionIndex, countriesData, usedCountries } = get();
+    const { questionIndex, countriesData, usedCountries, gameMode } = get();
     const nextIndex = questionIndex + 1;
 
-    if (nextIndex >= countriesData.length) {
+    // В бесконечном режиме игра продолжается бесконечно
+    if (gameMode === GameMode.ENDLESS) {
+      if (nextIndex >= countriesData.length) {
+        // Если страны закончились, загружаем новые
+        loadCountriesData().then(newData => {
+          const shuffled = [...newData].sort(() => Math.random() - 0.5);
+          set({
+            countriesData: shuffled.slice(0, 100),
+            usedCountries: [],
+          });
+        });
+      }
+    } else if (nextIndex >= countriesData.length) {
+      // В обычном режиме заканчиваем игру
       set({ phase: GamePhase.GAME_OVER, timerActive: false });
       return;
     }
 
-    // Выбираем следующую страну, которую ещё не использовали
+    // Выбираем следующую страну
     const available = countriesData.filter(c => !usedCountries.includes(c));
     const nextCountry = available.length > 0
       ? available[Math.floor(Math.random() * available.length)]
@@ -191,7 +248,7 @@ const useGameStore = create((set, get) => ({
   },
 
   confirmSelection: () => {
-    const { pendingSelection, currentQuestion, streak } = get();
+    const { pendingSelection, currentQuestion, streak, gameMode } = get();
     if (!pendingSelection) return;
 
     const isCorrect = pendingSelection?.properties?.ISO_A3 === currentQuestion?.properties?.ISO_A3;
@@ -211,33 +268,65 @@ const useGameStore = create((set, get) => ({
         highlightedCountries: [{ country: pendingSelection, color: 'green' }],
       });
     } else {
-      // Ошибочный ответ — сначала показываем ошибку красным
-      set({
-        selectedCountry: pendingSelection,
-        pendingSelection: null,
-        isCorrect,
-        phase: GamePhase.FEEDBACK,
-        timerActive: false,
-        highlightedCountries: [{ country: pendingSelection, color: 'red' }],
-      });
-
-      // Затем показываем правильный ответ зелёным (через 800мс)
-      setTimeout(() => {
+      // Ошибочный ответ
+      if (gameMode === GameMode.ENDLESS) {
+        // В бесконечном режиме просто показываем ошибку и продолжаем
         set({
-          highlightedCountries: [
-            { country: pendingSelection, color: 'red' },
-            { country: currentQuestion, color: 'green' },
-          ],
+          selectedCountry: pendingSelection,
+          pendingSelection: null,
+          isCorrect,
+          phase: GamePhase.FEEDBACK,
+          timerActive: false,
+          streak: 0, // Сбрасываем серию
+          highlightedCountries: [{ country: pendingSelection, color: 'red' }],
         });
 
-        // Перемещаем камеру на правильную страну (через 100мс после подсветки)
+        // Затем показываем правильный ответ зелёным (через 800мс)
         setTimeout(() => {
-          const event = new CustomEvent('focusOnCountry', {
-            detail: { country: currentQuestion }
+          set({
+            highlightedCountries: [
+              { country: pendingSelection, color: 'red' },
+              { country: currentQuestion, color: 'green' },
+            ],
           });
-          window.dispatchEvent(event);
-        }, 100);
-      }, 800);
+
+          // Перемещаем камеру на правильную страну (через 100мс после подсветки)
+          setTimeout(() => {
+            const event = new CustomEvent('focusOnCountry', {
+              detail: { country: currentQuestion }
+            });
+            window.dispatchEvent(event);
+          }, 100);
+        }, 800);
+      } else {
+        // В обычном режиме показываем ошибку и продолжаем
+        set({
+          selectedCountry: pendingSelection,
+          pendingSelection: null,
+          isCorrect,
+          phase: GamePhase.FEEDBACK,
+          timerActive: false,
+          highlightedCountries: [{ country: pendingSelection, color: 'red' }],
+        });
+
+        // Затем показываем правильный ответ зелёным (через 800мс)
+        setTimeout(() => {
+          set({
+            highlightedCountries: [
+              { country: pendingSelection, color: 'red' },
+              { country: currentQuestion, color: 'green' },
+            ],
+          });
+
+          // Перемещаем камеру на правильную страну (через 100мс после подсветки)
+          setTimeout(() => {
+            const event = new CustomEvent('focusOnCountry', {
+              detail: { country: currentQuestion }
+            });
+            window.dispatchEvent(event);
+          }, 100);
+        }, 800);
+      }
     }
   },
 

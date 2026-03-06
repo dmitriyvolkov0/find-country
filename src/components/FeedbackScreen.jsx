@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import useGameStore from '../store/gameStore';
+import useGameStore, { GameMode, GamePhase } from '../store/gameStore';
 
 /**
  * Экран обратной связи после ответа
@@ -12,6 +12,8 @@ export function FeedbackScreen({ onNext }) {
     score,
     timeLeft,
     highlightedCountries,
+    gameMode,
+    questionIndex,
   } = useGameStore();
 
   const [isVisible, setIsVisible] = useState(false);
@@ -19,6 +21,9 @@ export function FeedbackScreen({ onNext }) {
   const selectedName = selectedCountry?.properties?.NAME || 'Страна';
   const targetName = currentQuestion?.properties?.NAME || 'Страна';
   const pointsEarned = isCorrect ? Math.round(100 + Math.min(score % 5, 5) * 20 + timeLeft * 5) : 0;
+  
+  // Проверяем, была ли ошибка в бесконечном режиме
+  const isEndlessError = gameMode === GameMode.ENDLESS && !isCorrect;
 
   useEffect(() => {
     // Сбрасываем видимость при изменении подсветки
@@ -38,7 +43,7 @@ export function FeedbackScreen({ onNext }) {
   }, [highlightedCountries]);
 
   useEffect(() => {
-    // Автоматический переход к следующему вопросу после показа окна
+    // Автоматический переход к следующему вопросу
     if (isVisible) {
       const timer = setTimeout(() => {
         onNext();
@@ -87,6 +92,14 @@ export function FeedbackScreen({ onNext }) {
             {isCorrect && (
               <div className="mt-3 flex items-center justify-center gap-2">
                 <span className="text-green-200 text-sm">+{pointsEarned} очков</span>
+              </div>
+            )}
+            
+            {gameMode === GameMode.ENDLESS && (
+              <div className="mt-2 pt-2 border-t border-white/20">
+                <p className="text-blue-200 text-xs">
+                  Вопрос {questionIndex + 1} • Счёт: {score}
+                </p>
               </div>
             )}
           </div>
