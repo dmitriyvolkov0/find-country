@@ -69,7 +69,7 @@ export function Globe3D({ onCountryClick }) {
             lat,
             lng,
             name: props.NAME || '',
-            iso: props.ISO_A3 || '',
+            iso: props.ADM0_A3 || '',
           };
         });
 
@@ -117,14 +117,14 @@ export function Globe3D({ onCountryClick }) {
   const getCountryColor = useCallback((country) => {
     if (!currentQuestion) return '#4a5568';
 
-    const isSelected = selectedCountry?.properties?.ISO_A3 === country.properties?.ISO_A3;
-    const isTarget = currentQuestion.properties?.ISO_A3 === country.properties?.ISO_A3;
-    const isPending = pendingSelection?.properties?.ISO_A3 === country.properties?.ISO_A3;
+    const isSelected = selectedCountry?.properties?.ADM0_A3 === country.properties?.ADM0_A3;
+    const isTarget = currentQuestion.properties?.ADM0_A3 === country.properties?.ADM0_A3;
+    const isPending = pendingSelection?.properties?.ADM0_A3 === country.properties?.ADM0_A3;
 
     // Проверяем массив подсветки
     if (highlightedCountries && highlightedCountries.length > 0) {
       const highlighted = highlightedCountries.find(
-        h => h.country?.properties?.ISO_A3 === country.properties?.ISO_A3
+        h => h.country?.properties?.ADM0_A3 === country.properties?.ADM0_A3
       );
       if (highlighted) {
         return highlighted.color === 'red' ? '#ef4444' : '#22c55e';
@@ -146,7 +146,7 @@ export function Globe3D({ onCountryClick }) {
     }
 
     // Подсветка при наведении (только на десктопе)
-    if (!isMobile && hoveredCountry?.properties?.ISO_A3 === country.properties?.ISO_A3) {
+    if (!isMobile && hoveredCountry?.properties?.ADM0_A3 === country.properties?.ADM0_A3) {
       return '#60a5fa';
     }
 
@@ -162,7 +162,7 @@ export function Globe3D({ onCountryClick }) {
       return 0.06;
     }
     // Подсветка высоты при наведении (только на десктопе)
-    if (!isMobile && hoveredCountry?.properties?.ISO_A3 === country.properties?.ISO_A3) {
+    if (!isMobile && hoveredCountry?.properties?.ADM0_A3 === country.properties?.ADM0_A3) {
       return 0.12;
     }
     return 0.06;

@@ -251,7 +251,7 @@ const useGameStore = create((set, get) => ({
     const { pendingSelection, currentQuestion, streak, gameMode } = get();
     if (!pendingSelection) return;
 
-    const isCorrect = pendingSelection?.properties?.ISO_A3 === currentQuestion?.properties?.ISO_A3;
+    const isCorrect = pendingSelection?.properties?.ADM0_A3 === currentQuestion?.properties?.ADM0_A3;
 
     if (isCorrect) {
       // Правильный ответ — сразу переходим к FEEDBACK
