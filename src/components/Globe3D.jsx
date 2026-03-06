@@ -11,13 +11,22 @@ export function Globe3D({ onCountryClick }) {
     selectedCountry,
     phase,
     highlightedCountries,
-    pendingSelection, // Добавляем pendingSelection
+    pendingSelection,
   } = useGameStore();
 
   const [countries, setCountries] = useState({ features: [] });
   const [hoveredCountry, setHoveredCountry] = useState(null);
   const [countryLabels, setCountryLabels] = useState([]);
   const globeRef = useRef(null);
+
+  /**
+   * Проверка на мобильное устройство
+   */
+  const isMobile = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      (window.matchMedia('(pointer: coarse)').matches);
+  }, []);
 
   /**
    * Загрузка данных о странах
@@ -87,13 +96,20 @@ export function Globe3D({ onCountryClick }) {
    * Обработка наведения на страну
    */
   const handlePolygonHover = useCallback((country) => {
+    // На мобильных устройствах отключаем hover-эффекты
+    if (isMobile) {
+      setHoveredCountry(null);
+      document.body.style.cursor = 'default';
+      return;
+    }
+    
     setHoveredCountry(country);
     if (country && (phase === GamePhase.QUESTION || phase === GamePhase.VIEW)) {
       document.body.style.cursor = 'pointer';
     } else {
       document.body.style.cursor = 'default';
     }
-  }, [phase]);
+  }, [phase, isMobile]);
 
   /**
    * Определение цвета страны
@@ -129,13 +145,13 @@ export function Globe3D({ onCountryClick }) {
       }
     }
 
-    // Подсветка при наведении
-    if (hoveredCountry?.properties?.ISO_A3 === country.properties?.ISO_A3) {
+    // Подсветка при наведении (только на десктопе)
+    if (!isMobile && hoveredCountry?.properties?.ISO_A3 === country.properties?.ISO_A3) {
       return '#60a5fa';
     }
 
     return '#4a5568';
-  }, [currentQuestion, selectedCountry, phase, hoveredCountry, highlightedCountries, pendingSelection]);
+  }, [currentQuestion, selectedCountry, phase, hoveredCountry, highlightedCountries, pendingSelection, isMobile]);
 
   /**
    * Определение высоты страны
@@ -145,11 +161,12 @@ export function Globe3D({ onCountryClick }) {
     if (phase === GamePhase.FEEDBACK) {
       return 0.06;
     }
-    if (hoveredCountry?.properties?.ISO_A3 === country.properties?.ISO_A3) {
+    // Подсветка высоты при наведении (только на десктопе)
+    if (!isMobile && hoveredCountry?.properties?.ISO_A3 === country.properties?.ISO_A3) {
       return 0.12;
     }
     return 0.06;
-  }, [hoveredCountry, phase]);
+  }, [hoveredCountry, phase, isMobile]);
 
   /**
    * Фокусировка камеры на стране

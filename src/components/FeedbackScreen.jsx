@@ -21,13 +21,15 @@ export function FeedbackScreen({ onNext }) {
   const pointsEarned = isCorrect ? Math.round(100 + Math.min(score % 5, 5) * 20 + timeLeft * 5) : 0;
 
   useEffect(() => {
+    // Сбрасываем видимость при изменении подсветки
+    setIsVisible(false);
+
     // Показываем модальное окно с задержкой, чтобы игрок увидел подсветку стран
-    const hasHighlight = highlightedCountries && highlightedCountries.length > 0;
     const hasErrorHighlight = highlightedCountries?.some(h => h.color === 'red');
-    
+
     // Если есть подсветка ошибочной страны, ждём дольше (пока не покажется правильная)
     const delay = hasErrorHighlight ? 2000 : 500;
-    
+
     const timer = setTimeout(() => {
       setIsVisible(true);
     }, delay);

@@ -76,6 +76,7 @@ const useGameStore = create((set, get) => ({
   // Выбранная страна
   selectedCountry: null,
   pendingSelection: null, // Страна, ожидающая подтверждения пользователем
+  showConfirmation: false, // Показывать ли модальное окно подтверждения
   isCorrect: null,
 
   // Подсветка стран (для визуальной обратной связи)
