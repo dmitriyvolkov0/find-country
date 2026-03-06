@@ -17,8 +17,8 @@ export function QuestionScreen() {
   } = useGameStore();
 
   const countryName = currentQuestion?.properties?.NAME || 'Страна';
-  const timerPercentage = (timeLeft / 30) * 100;
-  const timerColor = timeLeft > 15 ? 'bg-green-500' : timeLeft > 5 ? 'bg-yellow-500' : 'bg-red-500';
+  const timerPercentage = (timeLeft / 90) * 100;
+  const timerColor = timeLeft > 30 ? 'bg-green-500' : timeLeft > 10 ? 'bg-yellow-500' : 'bg-red-500';
 
   /**
    * Возврат в главное меню
@@ -91,7 +91,7 @@ export function QuestionScreen() {
       </div>
 
       {/* Таймер */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 p-2 sm:p-3 md:p-4 safe-area-bottom">
+      <div className="absolute bottom-5 left-0 right-0 z-10 p-2 sm:p-3 md:p-4 safe-area-bottom">
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-between text-xs sm:text-sm text-white mb-2">
             <span>Время</span>

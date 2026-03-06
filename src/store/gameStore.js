@@ -70,7 +70,7 @@ const useGameStore = create((set, get) => ({
   maxStreak: 0,
 
   // Таймер
-  timeLeft: 30,
+  timeLeft: 90,
   timerActive: false,
 
   // Выбранная страна
@@ -121,7 +121,7 @@ const useGameStore = create((set, get) => ({
       correctAnswers: 0,
       streak: 0,
       maxStreak: 0,
-      timeLeft: 30,
+      timeLeft: 90,
       timerActive: true,
       selectedCountry: null,
       isCorrect: null,
@@ -170,7 +170,7 @@ const useGameStore = create((set, get) => ({
       phase: GamePhase.QUESTION,
       currentQuestion: nextCountry,
       questionIndex: nextIndex,
-      timeLeft: 30,
+      timeLeft: 90,
       timerActive: true,
       selectedCountry: null,
       pendingSelection: null,
@@ -261,7 +261,7 @@ const useGameStore = create((set, get) => ({
 function calculateScore(streak, timeLeft) {
   const baseScore = 100;
   const streakBonus = Math.min(streak, 5) * 20;
-  const timeBonus = timeLeft * 5;
+  const timeBonus = Math.floor(timeLeft * 1.5); // Баланс для 90 секунд
   return baseScore + streakBonus + timeBonus;
 }
 
