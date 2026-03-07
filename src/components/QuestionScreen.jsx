@@ -35,25 +35,24 @@ export function QuestionScreen() {
     : ((questionIndex + 1) / totalQuestions) * 100;
 
   /**
-   * Возврат в главное меню
+   * Возврат в главное меню или завершение бесконечного режима
    */
   const handleBackToMenu = () => {
-    useGameStore.setState({
-      phase: GamePhase.START,
-      score: 0,
-      questionIndex: 0,
-      correctAnswers: 0,
-    });
-  };
-  
-  /**
-   * Завершение игры (для бесконечного режима)
-   */
-  const handleFinishGame = () => {
-    useGameStore.setState({
-      phase: GamePhase.GAME_OVER,
-      timerActive: false,
-    });
+    if (gameMode === GameMode.ENDLESS) {
+      // В бесконечном режиме завершаем игру
+      useGameStore.setState({
+        phase: GamePhase.GAME_OVER,
+        timerActive: false,
+      });
+    } else {
+      // В обычных режимах возвращаемся в меню
+      useGameStore.setState({
+        phase: GamePhase.START,
+        score: 0,
+        questionIndex: 0,
+        correctAnswers: 0,
+      });
+    }
   };
 
   return (
@@ -110,36 +109,6 @@ export function QuestionScreen() {
               <p className="text-xs sm:text-sm text-blue-200">Счёт</p>
               <p className="text-[16px] sm:text-xl font-bold text-white text-center">{score}</p>
             </div>
-            
-            {/* Кнопка "Завершить" для бесконечного режима */}
-            {gameMode === GameMode.ENDLESS && (
-              <button
-                onClick={handleFinishGame}
-                className="px-3 py-1.5 sm:px-3 sm:py-2 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-400 hover:to-pink-500 text-white font-semibold text-xs sm:text-sm rounded-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-blue-900 flex items-center gap-1"
-                aria-label="Завершить игру"
-              >
-                <svg
-                  className="w-3.5 h-3.5 sm:w-4 sm:h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"
-                  />
-                </svg>
-              </button>
-            )}
           </div>
 
           {/* Второй ряд: Прогрессбар и режим игры */}

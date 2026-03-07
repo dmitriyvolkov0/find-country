@@ -1,4 +1,5 @@
 import React from 'react';
+import vkBridge from '@vkontakte/vk-bridge';
 import useGameStore from '../store/gameStore';
 import { useStars } from '../hooks/useVKStorage';
 
@@ -8,6 +9,39 @@ import { useStars } from '../hooks/useVKStorage';
 export function StartScreen({ onPlay, onViewMode }) {
   const { savedStats } = useGameStore();
   const { stars } = useStars();
+
+  /**
+   * Удаление всего прогресса пользователя
+   */
+  const handleDeleteProgress = async () => {
+    const confirmed = window.confirm('Вы уверены, что хотите удалить весь прогресс? Это действие нельзя отменить.');
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      // Удаляем ключи, устанавливая пустые значения
+      await Promise.all([
+        vkBridge.send('VKWebAppStorageSet', {
+          key: 'mapit_game_stats',
+          value: '',
+        }),
+        vkBridge.send('VKWebAppStorageSet', {
+          key: 'mapit_stars',
+          value: '',
+        }),
+        vkBridge.send('VKWebAppStorageSet', {
+          key: 'mapit_settings',
+          value: '',
+        }),
+      ]);
+      // Перезагружаем страницу для применения изменений
+      window.location.reload();
+    } catch (err) {
+      console.error('Ошибка при удалении прогресса:', err);
+      alert('Не удалось удалить прогресс. Попробуйте позже.');
+    }
+  };
 
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 z-20">
@@ -90,6 +124,14 @@ export function StartScreen({ onPlay, onViewMode }) {
             aria-label="Режим просмотра"
           >
             Режим просмотра
+          </button>
+
+          <button
+            onClick={handleDeleteProgress}
+            className="w-full px-6 py-3 sm:py-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white font-semibold text-lg sm:text-xl rounded-xl shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-blue-900"
+            aria-label="Удалить прогресс"
+          >
+            Удалить прогресс
           </button>
         </div>
       </div>

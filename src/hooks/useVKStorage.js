@@ -69,8 +69,10 @@ export function useVKStorage() {
    */
   const clear = useCallback(async () => {
     try {
-      await vkBridge.send('VKWebAppStorageDelete', {
-        keys: [STORAGE_KEY],
+      // Удаляем ключ, устанавливая пустое значение
+      await vkBridge.send('VKWebAppStorageSet', {
+        key: STORAGE_KEY,
+        value: '',
       });
       setData(null);
       return true;
