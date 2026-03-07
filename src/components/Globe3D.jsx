@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Globe from 'react-globe.gl';
 import useGameStore, { GamePhase } from '../store/gameStore';
+import { calculateCountryCentroid, getCountryDisplayName } from '../utils/countryCentroids';
 
 /**
  * Компонент 3D глобуса с интерактивными странами
@@ -53,32 +54,20 @@ export function Globe3D({ onCountryClick }) {
 
         setCountries({ features });
 
-        // Создаём данные для лейблов с координатами
+        // Создаём данные для лейблов с корректными координатами центроидов
         const labels = features.map(country => {
-          const props = country.properties;
-          let lat, lng;
-
-          // Используем центр bounding box: [minX, minY, maxX, maxY]
-          if (country.bbox) {
-            const [minX, minY, maxX, maxY] = country.bbox;
-            lat = (minY + maxY) / 2;
-            lng = (minX + maxX) / 2;
-          } else {
-            lat = 0;
-            lng = 0;
-          }
-
+          const centroid = calculateCountryCentroid(country);
           return {
-            lat,
-            lng,
-            name: props.NAME || '',
-            iso: props.ADM0_A3 || '',
+            lat: centroid.lat,
+            lng: centroid.lng,
+            name: getCountryDisplayName(country),
+            iso: country.properties.ADM0_A3 || '',
           };
         });
 
         setCountryLabels(labels);
       } catch (err) {
-        
+
       }
     };
 
@@ -187,38 +176,8 @@ export function Globe3D({ onCountryClick }) {
   const focusOnCountry = useCallback((country) => {
     if (!globeRef.current || !country) return;
 
-    // Получаем координаты центра страны
-    let lat, lng;
-    
-    // Пробуем использовать LABEL_Y/LABEL_X если есть
-    if (country.properties?.LABEL_Y && country.properties?.LABEL_X) {
-      lat = country.properties.LABEL_Y;
-      lng = country.properties.LABEL_X;
-    } else if (country.bbox) {
-      // Используем центр bounding box: [minX, minY, maxX, maxY]
-      const [minX, minY, maxX, maxY] = country.bbox;
-      lat = (minY + maxY) / 2;
-      lng = (minX + maxX) / 2;
-    } else {
-      // Fallback: вычисляем центр из геометрии
-      const coords = country.geometry?.coordinates;
-      if (coords && coords.length > 0) {
-        let sumLat = 0, sumLng = 0, count = 0;
-        const flattenCoords = Array.isArray(coords[0][0]) ? coords[0] : coords;
-        flattenCoords.forEach(ring => {
-          ring.forEach(([cLng, cLat]) => {
-            sumLat += cLat;
-            sumLng += cLng;
-            count++;
-          });
-        });
-        lat = sumLat / count;
-        lng = sumLng / count;
-      } else {
-        lat = 0;
-        lng = 0;
-      }
-    }
+    // Получаем координаты центра страны через утилиту
+    const { lat, lng } = calculateCountryCentroid(country);
 
     // Плавный переход камеры
     globeRef.current.pointOfView({

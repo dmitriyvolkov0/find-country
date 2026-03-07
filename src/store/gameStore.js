@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import vkBridge from '@vkontakte/vk-bridge';
+import { calculateCountryCentroid } from '../utils/countryCentroids';
 
 /**
  * Состояния игры
@@ -396,20 +397,8 @@ const useGameStore = create((set, get) => ({
       console.error('Stars save error!', err);
     }
 
-    // Получаем координаты центра страны для подсказки
-    let lat, lng;
-    if (currentQuestion?.bbox) {
-      const [minX, minY, maxX, maxY] = currentQuestion.bbox;
-      lat = (minY + maxY) / 2;
-      lng = (minX + maxX) / 2;
-    } else if (currentQuestion?.properties?.LABEL_Y && currentQuestion?.properties?.LABEL_X) {
-      lat = currentQuestion.properties.LABEL_Y;
-      lng = currentQuestion.properties.LABEL_X;
-    } else {
-      // Fallback
-      lat = 0;
-      lng = 0;
-    }
+    // Получаем координаты центра страны через утилиту
+    const { lat, lng } = calculateCountryCentroid(currentQuestion);
 
     // Показываем зону подсказки (координаты)
     setHintZone({ lat, lng });
