@@ -318,33 +318,44 @@ export function Globe3D({ onCountryClick }) {
 
         polygonsTransitionDuration={700}
 
-        // HTML элементы: названия стран (только в режиме просмотра)
-        htmlElementsData={phase === GamePhase.VIEW ? countryLabels : []}
+        // HTML элементы: названия стран (только в режиме просмотра) + маркер подсказки
+        htmlElementsData={[
+          ...(phase === GamePhase.VIEW ? countryLabels : []),
+          ...(showHintMarker ? [{
+            lat: hintCoords.lat,
+            lng: hintCoords.lng,
+            isHint: true,
+          }] : []),
+        ]}
         htmlElement={(elem) => {
           const div = document.createElement('div');
-          div.className = 'text-white text-xs font-semibold pointer-events-none';
-          div.style.cssText = `
-            background: rgba(0, 0, 0, 0.6);
-            padding: 2px 6px;
-            border-radius: 4px;
-            white-space: nowrap;
-            font-size: 11px;
-            text-shadow: 1px 1px 2px black;
-          `;
-          div.textContent = elem.name;
+          if (elem.isHint) {
+            // Жёлтое кольцо подсказки (без заливки, только border)
+            div.style.cssText = `
+              width: 200px;
+              height: 200px;
+              border-radius: 50%;
+              border: 4px solid rgba(234, 179, 8, 0.95);
+              background: transparent;
+              transform: translate(-50%, -50%);
+              pointer-events: none;
+              z-index: 1000;
+            `;
+          } else {
+            // Название страны
+            div.className = 'text-white text-xs font-semibold pointer-events-none';
+            div.style.cssText = `
+              background: rgba(0, 0, 0, 0.6);
+              padding: 2px 6px;
+              border-radius: 4px;
+              white-space: nowrap;
+              font-size: 11px;
+              text-shadow: 1px 1px 2px black;
+            `;
+            div.textContent = elem.name;
+          }
           return div;
         }}
-
-        // Маркеры подсказки (жёлтые круги, наносимые на карту поверх стран)
-        pointsData={showHintMarker ? [{ lat: hintCoords.lat, lng: hintCoords.lng }] : []}
-        pointLat={(d) => d.lat}
-        pointLng={(d) => d.lng}
-        pointColor={() => 'rgba(234, 179, 8, 0.5)'}
-        pointRadius={20} // Большой радиус
-        pointResolution={32} // Гладкий круг
-        pointOpacity={0.5} // Фиксированная прозрачность
-        pointElevation={0}
-        onPointClick={() => {}} // Игнорируем клики
       />
     </div>
   );
