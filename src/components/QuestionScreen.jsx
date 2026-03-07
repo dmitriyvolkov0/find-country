@@ -2,6 +2,9 @@ import React from 'react';
 import useGameStore, { GameMode, GAME_MODE_CONFIG, GamePhase } from '../store/gameStore';
 import { useStars } from '../hooks/useVKStorage';
 import ConfirmationButtons from './ConfirmationButtons';
+import HintButton from './HintButton';
+import HintModal from './HintModal';
+import InsufficientStarsModal from './InsufficientStarsModal';
 
 /**
  * Экран вопроса с таймером и прогрессом
@@ -191,6 +194,15 @@ export function QuestionScreen() {
 
       {/* Кнопки подтверждения/отмены выбора страны */}
       <ConfirmationButtons />
+
+      {/* Кнопка подсказки */}
+      <HintButton />
+
+      {/* Модальное окно подтверждения подсказки */}
+      <HintModal />
+
+      {/* Модальное окно недостатка звёзд */}
+      <InsufficientStarsModal />
     </>
   );
 }

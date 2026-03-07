@@ -131,6 +131,11 @@ const useGameStore = create((set, get) => ({
   savedStats: null,
   stars: 0, // Валюта игры (звёзды)
 
+  // Подсказки
+  hintZone: null, // Зона подсказки { lat, lng } - координаты центра региона
+  showHintConfirmModal: false, // Показать модальное окно подтверждения подсказки
+  showInsufficientStarsModal: false, // Показать модальное окно недостатка звёзд
+
   // Настройки (localStorage)
   settings: {
     soundEnabled: true,
@@ -143,6 +148,18 @@ const useGameStore = create((set, get) => ({
 
   // Установка количества звёзд
   setStars: (stars) => set({ stars }),
+
+  // Показать/скрыть модальное окно подтверждения подсказки
+  setShowHintConfirmModal: (show) => set({ showHintConfirmModal: show }),
+
+  // Показать/скрыть модальное окно недостатка звёзд
+  setShowInsufficientStarsModal: (show) => set({ showInsufficientStarsModal: show }),
+
+  // Установить зону подсказки
+  setHintZone: (zone) => set({ hintZone: zone }),
+
+  // Очистить зону подсказки
+  clearHintZone: () => set({ hintZone: null }),
 
   startGame: async (mode) => {
     // Определяем количество раундов в зависимости от режима
@@ -176,6 +193,7 @@ const useGameStore = create((set, get) => ({
       countriesData: selected,
       usedCountries: [selected[0]],
       totalQuestions: rounds,
+      hintZone: null, // Сбрасываем подсказку
     });
   },
 
@@ -239,6 +257,7 @@ const useGameStore = create((set, get) => ({
       pendingSelection: null,
       isCorrect: null,
       highlightedCountries: [],
+      hintZone: null, // Сбрасываем подсказку
       usedCountries: [...usedCountries, nextCountry],
     });
   },
@@ -272,6 +291,7 @@ const useGameStore = create((set, get) => ({
         streak: streak + 1,
         maxStreak: Math.max(get().maxStreak, streak + 1),
         highlightedCountries: [{ country: pendingSelection, color: 'green' }],
+        hintZone: null, // Очищаем подсказку
       });
     } else {
       // Ошибочный ответ
@@ -285,6 +305,7 @@ const useGameStore = create((set, get) => ({
           timerActive: false,
           streak: 0, // Сбрасываем серию
           highlightedCountries: [{ country: pendingSelection, color: 'red' }],
+          hintZone: null, // Очищаем подсказку
         });
 
         // Затем показываем правильный ответ зелёным (через 800мс)
@@ -313,6 +334,7 @@ const useGameStore = create((set, get) => ({
           phase: GamePhase.FEEDBACK,
           timerActive: false,
           highlightedCountries: [{ country: pendingSelection, color: 'red' }],
+          hintZone: null, // Очищаем подсказку
         });
 
         // Затем показываем правильный ответ зелёным (через 800мс)
@@ -348,6 +370,60 @@ const useGameStore = create((set, get) => ({
   stopTimer: () => set({ timerActive: false }),
 
   clearHighlightedCountries: () => set({ highlightedCountries: [] }),
+
+  // Активация подсказки (с проверкой и списанием звёзд)
+  showHint: async () => {
+    const { stars, currentQuestion, setHintZone, clearHintZone, setShowInsufficientStarsModal } = get();
+    const HINT_COST = 5;
+
+    // Проверяем, достаточно ли звёзд
+    if (stars < HINT_COST) {
+      setShowInsufficientStarsModal(true);
+      return false;
+    }
+
+    // Списываем звёзды
+    const newStars = stars - HINT_COST;
+    set({ stars: newStars });
+
+    // Сохраняем в VK Storage
+    try {
+      await vkBridge.send('VKWebAppStorageSet', {
+        key: 'mapit_stars',
+        value: String(newStars),
+      });
+    } catch (err) {
+      console.error('Stars save error!', err);
+    }
+
+    // Получаем координаты центра страны для подсказки
+    let lat, lng;
+    if (currentQuestion?.bbox) {
+      const [minX, minY, maxX, maxY] = currentQuestion.bbox;
+      lat = (minY + maxY) / 2;
+      lng = (minX + maxX) / 2;
+    } else if (currentQuestion?.properties?.LABEL_Y && currentQuestion?.properties?.LABEL_X) {
+      lat = currentQuestion.properties.LABEL_Y;
+      lng = currentQuestion.properties.LABEL_X;
+    } else {
+      // Fallback
+      lat = 0;
+      lng = 0;
+    }
+
+    // Показываем зону подсказки (координаты)
+    setHintZone({ lat, lng });
+
+    // Отправляем событие для поворота глобуса к региону
+    setTimeout(() => {
+      const event = new CustomEvent('focusOnHintRegion', {
+        detail: { lat, lng }
+      });
+      window.dispatchEvent(event);
+    }, 100);
+
+    return true;
+  },
 
   updateSettings: (newSettings) => {
     const updated = { ...get().settings, ...newSettings };

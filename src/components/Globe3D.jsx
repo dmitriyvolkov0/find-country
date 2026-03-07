@@ -12,11 +12,14 @@ export function Globe3D({ onCountryClick }) {
     phase,
     highlightedCountries,
     pendingSelection,
+    hintZone, // Зона подсказки { lat, lng }
   } = useGameStore();
 
   const [countries, setCountries] = useState({ features: [] });
   const [hoveredCountry, setHoveredCountry] = useState(null);
   const [countryLabels, setCountryLabels] = useState([]);
+  const [showHintMarker, setShowHintMarker] = useState(false); // Показывать ли маркер
+  const [hintCoords, setHintCoords] = useState({ lat: 0, lng: 0 }); // Координаты маркера
   const globeRef = useRef(null);
 
   /**
@@ -121,6 +124,16 @@ export function Globe3D({ onCountryClick }) {
     const isTarget = currentQuestion.properties?.ADM0_A3 === country.properties?.ADM0_A3;
     const isPending = pendingSelection?.properties?.ADM0_A3 === country.properties?.ADM0_A3;
 
+    // Проверяем зону подсказки (жёлтый цвет для региона)
+    if (hintZone?.countries && hintZone.countries.length > 0) {
+      const hinted = hintZone.countries.find(
+        h => h.country?.properties?.ADM0_A3 === country.properties?.ADM0_A3
+      );
+      if (hinted) {
+        return '#eab308'; // Жёлтый цвет для подсказки
+      }
+    }
+
     // Проверяем массив подсветки
     if (highlightedCountries && highlightedCountries.length > 0) {
       const highlighted = highlightedCountries.find(
@@ -151,7 +164,7 @@ export function Globe3D({ onCountryClick }) {
     }
 
     return '#4a5568';
-  }, [currentQuestion, selectedCountry, phase, hoveredCountry, highlightedCountries, pendingSelection, isMobile]);
+  }, [currentQuestion, selectedCountry, phase, hoveredCountry, highlightedCountries, pendingSelection, hintZone, isMobile]);
 
   /**
    * Определение высоты страны
@@ -230,6 +243,60 @@ export function Globe3D({ onCountryClick }) {
     };
   }, [focusOnCountry]);
 
+  /**
+   * Обработчик события фокусировки на регионе подсказки
+   */
+  useEffect(() => {
+    const handleHintFocusEvent = (e) => {
+      const { lat, lng } = e.detail;
+      if (lat !== undefined && lng !== undefined && globeRef.current) {
+        // Поворот к координатам подсказки
+        globeRef.current.pointOfView({
+          lat,
+          lng,
+          altitude: 1.5,
+        }, 1500);
+      }
+    };
+
+    window.addEventListener('focusOnHintRegion', handleHintFocusEvent);
+
+    return () => {
+      window.removeEventListener('focusOnHintRegion', handleHintFocusEvent);
+    };
+  }, []);
+
+  /**
+   * Обновление маркера подсказки при изменении hintZone (простое появление/исчезновение)
+   */
+  useEffect(() => {
+    let hideTimeout;
+
+    // Если появилась подсказка, планируем её исчезновение через 4 секунды
+    if (hintZone?.lat !== undefined) {
+      // Сразу показываем маркер
+      setHintCoords({ lat: hintZone.lat, lng: hintZone.lng });
+      setShowHintMarker(true);
+      
+      // Автоматическое скрытие через 4 секунды
+      hideTimeout = setTimeout(() => {
+        // Скрываем маркер
+        setShowHintMarker(false);
+        // Очищаем hintZone после скрытия
+        useGameStore.getState().clearHintZone();
+      }, 4000); // 4 секунды
+    } else {
+      // Если hintZone очищен, просто скрываем маркер
+      setShowHintMarker(false);
+    }
+
+    return () => {
+      if (hideTimeout) {
+        clearTimeout(hideTimeout);
+      }
+    };
+  }, [hintZone]);
+
   return (
     <div className="w-full h-full" style={{ touchAction: 'none' }}>
       <Globe
@@ -251,7 +318,7 @@ export function Globe3D({ onCountryClick }) {
 
         polygonsTransitionDuration={700}
 
-        // HTML элементы для названий стран (только в режиме просмотра)
+        // HTML элементы: названия стран (только в режиме просмотра)
         htmlElementsData={phase === GamePhase.VIEW ? countryLabels : []}
         htmlElement={(elem) => {
           const div = document.createElement('div');
@@ -267,6 +334,17 @@ export function Globe3D({ onCountryClick }) {
           div.textContent = elem.name;
           return div;
         }}
+
+        // Маркеры подсказки (жёлтые круги, наносимые на карту поверх стран)
+        pointsData={showHintMarker ? [{ lat: hintCoords.lat, lng: hintCoords.lng }] : []}
+        pointLat={(d) => d.lat}
+        pointLng={(d) => d.lng}
+        pointColor={() => 'rgba(234, 179, 8, 0.5)'}
+        pointRadius={20} // Большой радиус
+        pointResolution={32} // Гладкий круг
+        pointOpacity={0.5} // Фиксированная прозрачность
+        pointElevation={0}
+        onPointClick={() => {}} // Игнорируем клики
       />
     </div>
   );
