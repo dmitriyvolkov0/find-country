@@ -5,6 +5,7 @@ import ConfirmationButtons from './ConfirmationButtons';
 import HintModal from './HintModal';
 import InsufficientStarsModal from './InsufficientStarsModal';
 import TimeBonusModal from './TimeBonusModal';
+import ChangeCountryModal from './ChangeCountryModal';
 import GameMenu from './GameMenu';
 
 /**
@@ -173,6 +174,9 @@ export function QuestionScreen() {
 
       {/* Модальное окно подтверждения +30 секунд */}
       <TimeBonusModal />
+
+      {/* Модальное окно подтверждения смены страны */}
+      <ChangeCountryModal />
 
       {/* Модальное окно недостатка звёзд */}
       <InsufficientStarsModal />

@@ -137,6 +137,7 @@ const useGameStore = create((set, get) => ({
   showHintConfirmModal: false, // Показать модальное окно подтверждения подсказки
   showInsufficientStarsModal: false, // Показать модальное окно недостатка звёзд
   showTimeBonusConfirmModal: false, // Показать модальное окно подтверждения +30 секунд
+  showChangeCountryConfirmModal: false, // Показать модальное окно подтверждения смены страны
 
   // Настройки (localStorage)
   settings: {
@@ -159,6 +160,9 @@ const useGameStore = create((set, get) => ({
 
   // Показать/скрыть модальное окно подтверждения +30 секунд
   setShowTimeBonusConfirmModal: (show) => set({ showTimeBonusConfirmModal: show }),
+
+  // Показать/скрыть модальное окно подтверждения смены страны
+  setShowChangeCountryConfirmModal: (show) => set({ showChangeCountryConfirmModal: show }),
 
   // Установить зону подсказки
   setHintZone: (zone) => set({ hintZone: zone }),
@@ -448,6 +452,65 @@ const useGameStore = create((set, get) => ({
     const { timeLeft, updateTimer } = get();
     const newTime = Math.min(timeLeft + TIME_BONUS_SECONDS, 180); // Максимум 180 секунд
     updateTimer(newTime);
+
+    return true;
+  },
+
+  // Смена страны (с проверкой и списанием звёзд)
+  changeCountry: async () => {
+    const { stars, setStars, setShowInsufficientStarsModal, countriesData, currentQuestion, usedCountries } = get();
+    const CHANGE_COUNTRY_COST = 2;
+
+    // Проверяем, достаточно ли звёзд
+    if (stars < CHANGE_COUNTRY_COST) {
+      setShowInsufficientStarsModal(true);
+      return false;
+    }
+
+    // Списываем звёзды
+    const newStars = stars - CHANGE_COUNTRY_COST;
+    setStars(newStars);
+
+    // Сохраняем в VK Storage
+    try {
+      await vkBridge.send('VKWebAppStorageSet', {
+        key: 'mapit_stars',
+        value: String(newStars),
+      });
+    } catch (err) {
+      console.error('Stars save error!', err);
+    }
+
+    // Выбираем новую страну из доступных
+    const availableCountries = countriesData.filter(
+      c => c.properties.ADM0_A3 !== currentQuestion?.properties?.ADM0_A3
+    );
+
+    if (availableCountries.length === 0) {
+      // Если нет доступных стран, загружаем новые
+      const newData = await loadCountriesData();
+      const shuffled = [...newData].sort(() => Math.random() - 0.5);
+      const newCountry = shuffled[0];
+      
+      set({
+        currentQuestion: newCountry,
+        pendingSelection: null,
+        isCorrect: null,
+        highlightedCountries: [],
+        hintZone: null,
+      });
+    } else {
+      // Выбираем случайную страну из доступных
+      const newCountry = availableCountries[Math.floor(Math.random() * availableCountries.length)];
+      
+      set({
+        currentQuestion: newCountry,
+        pendingSelection: null,
+        isCorrect: null,
+        highlightedCountries: [],
+        hintZone: null,
+      });
+    }
 
     return true;
   },
