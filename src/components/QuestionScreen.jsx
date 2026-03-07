@@ -2,11 +2,10 @@ import React from 'react';
 import useGameStore, { GameMode, GAME_MODE_CONFIG, GamePhase } from '../store/gameStore';
 import { useStars } from '../hooks/useVKStorage';
 import ConfirmationButtons from './ConfirmationButtons';
-import HintButton from './HintButton';
 import HintModal from './HintModal';
 import InsufficientStarsModal from './InsufficientStarsModal';
-import TimeBonusButton from './TimeBonusButton';
 import TimeBonusModal from './TimeBonusModal';
+import GameMenu from './GameMenu';
 
 /**
  * Экран вопроса с таймером и прогрессом
@@ -166,11 +165,8 @@ export function QuestionScreen() {
       {/* Кнопка подтверждения/отмены выбора страны */}
       <ConfirmationButtons />
 
-      {/* Кнопка подсказки */}
-      <HintButton />
-
-      {/* Кнопка +30 секунд */}
-      <TimeBonusButton />
+      {/* Игровое меню */}
+      <GameMenu />
 
       {/* Модальное окно подтверждения подсказки */}
       <HintModal />
