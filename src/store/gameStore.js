@@ -136,6 +136,7 @@ const useGameStore = create((set, get) => ({
   hintZone: null, // Зона подсказки { lat, lng } - координаты центра региона
   showHintConfirmModal: false, // Показать модальное окно подтверждения подсказки
   showInsufficientStarsModal: false, // Показать модальное окно недостатка звёзд
+  showTimeBonusConfirmModal: false, // Показать модальное окно подтверждения +30 секунд
 
   // Настройки (localStorage)
   settings: {
@@ -155,6 +156,9 @@ const useGameStore = create((set, get) => ({
 
   // Показать/скрыть модальное окно недостатка звёзд
   setShowInsufficientStarsModal: (show) => set({ showInsufficientStarsModal: show }),
+
+  // Показать/скрыть модальное окно подтверждения +30 секунд
+  setShowTimeBonusConfirmModal: (show) => set({ showTimeBonusConfirmModal: show }),
 
   // Установить зону подсказки
   setHintZone: (zone) => set({ hintZone: zone }),
@@ -410,6 +414,40 @@ const useGameStore = create((set, get) => ({
       });
       window.dispatchEvent(event);
     }, 100);
+
+    return true;
+  },
+
+  // Добавление +30 секунд ко времени (с проверкой и списанием звёзд)
+  addTimeBonus: async () => {
+    const { stars, setStars, setShowInsufficientStarsModal } = get();
+    const TIME_BONUS_COST = 5;
+    const TIME_BONUS_SECONDS = 30;
+
+    // Проверяем, достаточно ли звёзд
+    if (stars < TIME_BONUS_COST) {
+      setShowInsufficientStarsModal(true);
+      return false;
+    }
+
+    // Списываем звёзды
+    const newStars = stars - TIME_BONUS_COST;
+    setStars(newStars);
+
+    // Сохраняем в VK Storage
+    try {
+      await vkBridge.send('VKWebAppStorageSet', {
+        key: 'mapit_stars',
+        value: String(newStars),
+      });
+    } catch (err) {
+      console.error('Stars save error!', err);
+    }
+
+    // Добавляем 30 секунд к таймеру
+    const { timeLeft, updateTimer } = get();
+    const newTime = Math.min(timeLeft + TIME_BONUS_SECONDS, 180); // Максимум 180 секунд
+    updateTimer(newTime);
 
     return true;
   },

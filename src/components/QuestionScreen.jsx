@@ -5,6 +5,8 @@ import ConfirmationButtons from './ConfirmationButtons';
 import HintButton from './HintButton';
 import HintModal from './HintModal';
 import InsufficientStarsModal from './InsufficientStarsModal';
+import TimeBonusButton from './TimeBonusButton';
+import TimeBonusModal from './TimeBonusModal';
 
 /**
  * Экран вопроса с таймером и прогрессом
@@ -161,14 +163,20 @@ export function QuestionScreen() {
         </div>
       </div>
 
-      {/* Кнопки подтверждения/отмены выбора страны */}
+      {/* Кнопка подтверждения/отмены выбора страны */}
       <ConfirmationButtons />
 
       {/* Кнопка подсказки */}
       <HintButton />
 
+      {/* Кнопка +30 секунд */}
+      <TimeBonusButton />
+
       {/* Модальное окно подтверждения подсказки */}
       <HintModal />
+
+      {/* Модальное окно подтверждения +30 секунд */}
+      <TimeBonusModal />
 
       {/* Модальное окно недостатка звёзд */}
       <InsufficientStarsModal />
